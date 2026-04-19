@@ -22,9 +22,11 @@ archives:
         format: zip
 
 brews:
-  - repository:
+  - name: liferay-issues-cli
+    repository:
       owner: david-truong
-      name: homebrew-tap
+      name: homebrew-liferay
+    directory: Formula
     homepage: https://github.com/david-truong/liferay-issues-cli
     description: CLI tool for managing Liferay Jira tickets
     license: MIT
