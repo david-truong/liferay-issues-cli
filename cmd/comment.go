@@ -20,9 +20,9 @@ The message can be provided as a positional argument, via -m flag, -e editor, or
 
 Examples:
   issues comment "my comment"              # ticket from branch, inline message
-  issues comment LPS-123 "my comment"      # explicit ticket, inline message
-  issues comment LPS-123 -m "my comment"   # explicit ticket, flag message
-  issues comment LPS-123                   # explicit ticket, opens editor
+  issues comment LPD-123 "my comment"      # explicit ticket, inline message
+  issues comment LPD-123 -m "my comment"   # explicit ticket, flag message
+  issues comment LPD-123                   # explicit ticket, opens editor
   issues comment                           # ticket from branch, opens editor`,
 	Args: cobra.MaximumNArgs(2),
 	RunE: commentRun,
@@ -39,7 +39,7 @@ func commentRun(cmd *cobra.Command, args []string) error {
 
 	switch len(args) {
 	case 2:
-		// issues comment LPS-123 "my comment"
+		// issues comment LPD-123 "my comment"
 		ticket = args[0]
 		positionalMessage = args[1]
 	case 1:

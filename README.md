@@ -58,30 +58,30 @@ Generate an API token at https://id.atlassian.com/manage-profile/security/api-to
 ### View an issue
 
 ```sh
-# From current git branch (extracts ticket ID like LPS-12345)
+# From current git branch (extracts ticket ID like LPD-12345)
 issues
 
 # By ticket key
-issues view LPS-12345
+issues view LPD-12345
 
 # Detailed view with status, assignee, description
-issues view LPS-12345
+issues view LPD-12345
 
 # Raw JSON output
-issues view LPS-12345 --json
+issues view LPD-12345 --json
 
 # Extract a specific field
-issues view LPS-12345 -f .fields.status.name
+issues view LPD-12345 -f .fields.status.name
 
 # Open in browser
-issues open LPS-12345
+issues open LPD-12345
 ```
 
 ### Create an issue
 
 ```sh
 # With flags
-issues create -p LPS -t Bug -s "Login page crashes on Safari" -d "Steps to reproduce..."
+issues create -p LPD -t Bug -s "Login page crashes on Safari" -d "Steps to reproduce..."
 
 # Interactive mode (prompts for fields)
 issues create -i
@@ -93,25 +93,25 @@ issues create -s "Fix typo in header"
 ### Update an issue
 
 ```sh
-issues update LPS-12345 --summary "Updated title"
-issues update LPS-12345 --assignee ACCOUNT_ID
-issues update LPS-12345 --priority High
-issues update LPS-12345 --add-label frontend
-issues update LPS-12345 --remove-label backend
+issues update LPD-12345 --summary "Updated title"
+issues update LPD-12345 --assignee ACCOUNT_ID
+issues update LPD-12345 --priority High
+issues update LPD-12345 --add-label frontend
+issues update LPD-12345 --remove-label backend
 ```
 
 ### Transition an issue
 
 ```sh
 # Interactive picker
-issues transition LPS-12345
+issues transition LPD-12345
 
 # By status name (fuzzy matched)
-issues transition LPS-12345 "In Progress"
-issues transition LPS-12345 resolve
+issues transition LPD-12345 "In Progress"
+issues transition LPD-12345 resolve
 
 # With a comment
-issues transition LPS-12345 "In Progress" -m "Starting work on this"
+issues transition LPD-12345 "In Progress" -m "Starting work on this"
 ```
 
 ### List issues
@@ -121,10 +121,10 @@ issues transition LPS-12345 "In Progress" -m "Starting work on this"
 issues list -a me
 
 # Filter by project and status
-issues list -p LPS --status "In Progress"
+issues list -p LPD --status "In Progress"
 
 # Raw JQL
-issues list --jql "project = LPS AND assignee = currentUser() ORDER BY updated DESC"
+issues list --jql "project = LPD AND assignee = currentUser() ORDER BY updated DESC"
 
 # Limit results
 issues list -a me -n 50
@@ -134,23 +134,23 @@ issues list -a me -n 50
 
 ```sh
 # Add a comment
-issues comment LPS-12345 -m "This is fixed in the latest build"
+issues comment LPD-12345 -m "This is fixed in the latest build"
 
 # Open your editor to write a comment
-issues comment LPS-12345 -e
+issues comment LPD-12345 -e
 
 # Pipe from stdin
-echo "Automated comment" | issues comment LPS-12345
+echo "Automated comment" | issues comment LPD-12345
 
 # List comments
-issues comment LPS-12345 --list
+issues comment LPD-12345 --list
 ```
 
 ### Configuration
 
 ```sh
 # Set default project
-issues config set jira.default_project LPS
+issues config set jira.default_project LPD
 
 # Set default issue type
 issues config set defaults.issue_type Bug
