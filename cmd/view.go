@@ -56,11 +56,11 @@ func viewRun(cmd *cobra.Command, args []string) error {
 				return err
 			}
 			if len(fieldFlags) == 1 {
-				printField(navigateJSON(data, fieldFlags[0]))
+				printField(navigateJSON(data, fieldFlags[0]), true)
 			} else {
 				for _, f := range fieldFlags {
 					fmt.Printf("%s: ", f)
-					printFieldCompact(navigateJSON(data, f))
+					printField(navigateJSON(data, f), false)
 				}
 			}
 			return nil
@@ -89,23 +89,17 @@ func viewRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// printField prints a single field value: strings raw, everything else as indented JSON.
-func printField(v interface{}) {
+func printField(v interface{}, indent bool) {
 	if s, ok := v.(string); ok {
 		fmt.Println(s)
 		return
 	}
-	out, _ := json.MarshalIndent(v, "", "  ")
-	fmt.Println(string(out))
-}
-
-// printFieldCompact prints a field value on one line (used in multi-field labeled output).
-func printFieldCompact(v interface{}) {
-	if s, ok := v.(string); ok {
-		fmt.Println(s)
-		return
+	var out []byte
+	if indent {
+		out, _ = json.MarshalIndent(v, "", "  ")
+	} else {
+		out, _ = json.Marshal(v)
 	}
-	out, _ := json.Marshal(v)
 	fmt.Println(string(out))
 }
 

@@ -8,6 +8,18 @@ import (
 	"testing"
 )
 
+func captureStdout(fn func()) string {
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	fn()
+	w.Close()
+	os.Stdout = old
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	return buf.String()
+}
+
 func TestNavigateJSON(t *testing.T) {
 	data := map[string]interface{}{
 		"fields": map[string]interface{}{
@@ -76,7 +88,7 @@ func TestNavigateJSON(t *testing.T) {
 	}
 }
 
-func TestPrintFieldCompact(t *testing.T) {
+func TestPrintField(t *testing.T) {
 	data := map[string]interface{}{
 		"fields": map[string]interface{}{
 			"summary": "Test issue",
@@ -86,21 +98,9 @@ func TestPrintFieldCompact(t *testing.T) {
 		"key": "LPS-123",
 	}
 
-	captureStdout := func(fn func()) string {
-		old := os.Stdout
-		r, w, _ := os.Pipe()
-		os.Stdout = w
-		fn()
-		w.Close()
-		os.Stdout = old
-		var buf bytes.Buffer
-		io.Copy(&buf, r)
-		return buf.String()
-	}
-
 	t.Run("single field preserves existing output format", func(t *testing.T) {
 		got := captureStdout(func() {
-			printField(navigateJSON(data, ".fields.summary"))
+			printField(navigateJSON(data, ".fields.summary"), true)
 		})
 		if got != "Test issue\n" {
 			t.Errorf("got %q, want %q", got, "Test issue\n")
@@ -112,7 +112,7 @@ func TestPrintFieldCompact(t *testing.T) {
 		got := captureStdout(func() {
 			for _, f := range fields {
 				fmt.Printf("%s: ", f)
-				printFieldCompact(navigateJSON(data, f))
+				printField(navigateJSON(data, f), false)
 			}
 		})
 		want := ".fields.summary: Test issue\n.fields.status.name: Open\n"
@@ -124,7 +124,7 @@ func TestPrintFieldCompact(t *testing.T) {
 	t.Run("array field prints compact JSON", func(t *testing.T) {
 		got := captureStdout(func() {
 			fmt.Printf(".fields.labels: ")
-			printFieldCompact(navigateJSON(data, ".fields.labels"))
+			printField(navigateJSON(data, ".fields.labels"), false)
 		})
 		want := ".fields.labels: [\"bug\",\"critical\"]\n"
 		if got != want {
