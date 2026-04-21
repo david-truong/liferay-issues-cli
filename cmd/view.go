@@ -23,6 +23,7 @@ var viewCmd = &cobra.Command{
 func init() {
 	viewCmd.Flags().BoolP("json", "j", false, "output raw JSON")
 	viewCmd.Flags().StringArrayP("field", "f", nil, "extract a field (jq-style path, e.g. .fields.summary); repeat for multiple fields")
+	viewCmd.Flags().BoolP("text", "t", false, "render the selected field's ADF body as plain text (requires --field)")
 	viewCmd.Flags().BoolP("web", "w", false, "open in browser")
 }
 
@@ -45,6 +46,14 @@ func viewRun(cmd *cobra.Command, args []string) error {
 
 	jsonFlag, _ := cmd.Flags().GetBool("json")
 	fieldFlags, _ := cmd.Flags().GetStringArray("field")
+	textFlag, _ := cmd.Flags().GetBool("text")
+
+	if textFlag && len(fieldFlags) == 0 {
+		return fmt.Errorf("--text requires --field")
+	}
+	if textFlag && jsonFlag {
+		return fmt.Errorf("--text and --json are mutually exclusive")
+	}
 
 	if jsonFlag || len(fieldFlags) > 0 {
 		raw, err := client.GetIssueRaw(ticket)
@@ -58,11 +67,22 @@ func viewRun(cmd *cobra.Command, args []string) error {
 				return err
 			}
 			if len(fieldFlags) == 1 {
-				printField(navigateJSON(data, fieldFlags[0]), true)
+				result := navigateJSON(data, fieldFlags[0])
+				if textFlag {
+					printADFResult(result)
+				} else {
+					printField(result, true)
+				}
 			} else {
 				for _, f := range fieldFlags {
-					fmt.Printf("%s: ", f)
-					printField(navigateJSON(data, f), false)
+					result := navigateJSON(data, f)
+					if textFlag {
+						fmt.Printf("%s:\n", f)
+						printADFResult(result)
+					} else {
+						fmt.Printf("%s: ", f)
+						printField(result, false)
+					}
 				}
 			}
 			return nil
@@ -103,6 +123,21 @@ func printField(v interface{}, indent bool) {
 		out, _ = json.Marshal(v)
 	}
 	fmt.Println(string(out))
+}
+
+// printADFResult renders a field value (or slice of values) through the ADF
+// text extractor. Array results are printed as blocks separated by blank lines.
+func printADFResult(v interface{}) {
+	if arr, ok := v.([]interface{}); ok {
+		for i, elem := range arr {
+			fmt.Println(ui.ExtractText(elem))
+			if i < len(arr)-1 {
+				fmt.Println()
+			}
+		}
+		return
+	}
+	fmt.Println(ui.ExtractText(v))
 }
 
 // navigateJSON traverses a JSON structure using a dot-separated path.

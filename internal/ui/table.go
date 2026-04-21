@@ -41,7 +41,7 @@ func PrintIssueDetail(issue *jira.Issue, instance string) {
 	}
 	fmt.Printf("  URL:      https://%s/browse/%s\n", instance, issue.Key)
 
-	desc := extractText(issue.Fields.Description)
+	desc := ExtractText(issue.Fields.Description)
 	if desc != "" {
 		fmt.Println()
 		fmt.Println(desc)
@@ -91,7 +91,7 @@ func PrintComments(comments []jira.Comment) {
 		}
 
 		fmt.Printf("\033[1m%s\033[0m  %s\n", author, created)
-		body := extractText(c.Body)
+		body := ExtractText(c.Body)
 		if body != "" {
 			fmt.Println(body)
 		}
@@ -147,8 +147,8 @@ func formatDate(s string) string {
 	return s
 }
 
-// extractText pulls plain text from either a string or ADF document.
-func extractText(v interface{}) string {
+// ExtractText pulls plain text from either a string or ADF document.
+func ExtractText(v interface{}) string {
 	if v == nil {
 		return ""
 	}

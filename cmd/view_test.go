@@ -46,61 +46,17 @@ func TestNavigateJSON(t *testing.T) {
 		path string
 		want interface{}
 	}{
-		{
-			name: "top-level field",
-			path: ".key",
-			want: "LPS-123",
-		},
-		{
-			name: "nested field",
-			path: ".fields.summary",
-			want: "Test issue",
-		},
-		{
-			name: "deeply nested field",
-			path: ".fields.status.name",
-			want: "Open",
-		},
-		{
-			name: "without leading dot",
-			path: "fields.summary",
-			want: "Test issue",
-		},
-		{
-			name: "nonexistent field",
-			path: ".fields.nonexistent",
-			want: nil,
-		},
-		{
-			name: "empty path returns whole object",
-			path: "",
-			want: data,
-		},
-		{
-			name: "array iterate returns all elements",
-			path: ".fields.labels[]",
-			want: []interface{}{"bug", "critical"},
-		},
-		{
-			name: "array index first element",
-			path: ".fields.labels[0]",
-			want: "bug",
-		},
-		{
-			name: "array index second element",
-			path: ".fields.labels[1]",
-			want: "critical",
-		},
-		{
-			name: "array index out of range returns nil",
-			path: ".fields.labels[5]",
-			want: nil,
-		},
-		{
-			name: "iterate and pluck nested key",
-			path: ".fields.issuelinks[].outwardIssue.key",
-			want: []interface{}{"LPS-1", "LPS-2"},
-		},
+		{name: "top-level field", path: ".key", want: "LPS-123"},
+		{name: "nested field", path: ".fields.summary", want: "Test issue"},
+		{name: "deeply nested field", path: ".fields.status.name", want: "Open"},
+		{name: "without leading dot", path: "fields.summary", want: "Test issue"},
+		{name: "nonexistent field", path: ".fields.nonexistent", want: nil},
+		{name: "empty path returns whole object", path: "", want: data},
+		{name: "array iterate returns all elements", path: ".fields.labels[]", want: []interface{}{"bug", "critical"}},
+		{name: "array index first element", path: ".fields.labels[0]", want: "bug"},
+		{name: "array index second element", path: ".fields.labels[1]", want: "critical"},
+		{name: "array index out of range returns nil", path: ".fields.labels[5]", want: nil},
+		{name: "iterate and pluck nested key", path: ".fields.issuelinks[].outwardIssue.key", want: []interface{}{"LPS-1", "LPS-2"}},
 	}
 
 	for _, tt := range tests {
@@ -158,6 +114,45 @@ func TestPrintField(t *testing.T) {
 			printField(navigateJSON(data, ".fields.labels"), false)
 		})
 		want := ".fields.labels: [\"bug\",\"critical\"]\n"
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+}
+
+func TestPrintADFResult(t *testing.T) {
+	adfParagraph := func(text string) map[string]interface{} {
+		return map[string]interface{}{
+			"type": "doc",
+			"content": []interface{}{
+				map[string]interface{}{
+					"type": "paragraph",
+					"content": []interface{}{
+						map[string]interface{}{"type": "text", "text": text},
+					},
+				},
+			},
+		}
+	}
+
+	t.Run("plain string passes through unchanged", func(t *testing.T) {
+		got := captureStdout(func() { printADFResult("hello") })
+		if got != "hello\n" {
+			t.Errorf("got %q, want %q", got, "hello\n")
+		}
+	})
+
+	t.Run("ADF document renders to plain text", func(t *testing.T) {
+		got := captureStdout(func() { printADFResult(adfParagraph("Fix the bug")) })
+		if got != "Fix the bug\n" {
+			t.Errorf("got %q, want %q", got, "Fix the bug\n")
+		}
+	})
+
+	t.Run("array of ADF documents prints blocks separated by blank lines", func(t *testing.T) {
+		arr := []interface{}{adfParagraph("first"), adfParagraph("second")}
+		got := captureStdout(func() { printADFResult(arr) })
+		want := "first\n\nsecond\n"
 		if got != want {
 			t.Errorf("got %q, want %q", got, want)
 		}
