@@ -1,9 +1,25 @@
 package cmd
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+	"os"
 	"reflect"
 	"testing"
 )
+
+func captureStdout(fn func()) string {
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	fn()
+	w.Close()
+	os.Stdout = old
+	var buf bytes.Buffer
+	io.Copy(&buf, r)
+	return buf.String()
+}
 
 func TestNavigateJSON(t *testing.T) {
 	data := map[string]interface{}{
@@ -101,6 +117,51 @@ func TestNavigateJSON(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPrintField(t *testing.T) {
+	data := map[string]interface{}{
+		"fields": map[string]interface{}{
+			"summary": "Test issue",
+			"status":  map[string]interface{}{"name": "Open"},
+			"labels":  []interface{}{"bug", "critical"},
+		},
+		"key": "LPS-123",
+	}
+
+	t.Run("single field preserves existing output format", func(t *testing.T) {
+		got := captureStdout(func() {
+			printField(navigateJSON(data, ".fields.summary"), true)
+		})
+		if got != "Test issue\n" {
+			t.Errorf("got %q, want %q", got, "Test issue\n")
+		}
+	})
+
+	t.Run("multi-field prints labeled lines", func(t *testing.T) {
+		fields := []string{".fields.summary", ".fields.status.name"}
+		got := captureStdout(func() {
+			for _, f := range fields {
+				fmt.Printf("%s: ", f)
+				printField(navigateJSON(data, f), false)
+			}
+		})
+		want := ".fields.summary: Test issue\n.fields.status.name: Open\n"
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
+
+	t.Run("array field prints compact JSON", func(t *testing.T) {
+		got := captureStdout(func() {
+			fmt.Printf(".fields.labels: ")
+			printField(navigateJSON(data, ".fields.labels"), false)
+		})
+		want := ".fields.labels: [\"bug\",\"critical\"]\n"
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
 }
 
 func TestSplitPath(t *testing.T) {

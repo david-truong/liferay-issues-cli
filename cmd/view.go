@@ -22,7 +22,7 @@ var viewCmd = &cobra.Command{
 
 func init() {
 	viewCmd.Flags().BoolP("json", "j", false, "output raw JSON")
-	viewCmd.Flags().StringP("field", "f", "", "extract a specific field (jq-style path, e.g. .fields.summary)")
+	viewCmd.Flags().StringArrayP("field", "f", nil, "extract a field (jq-style path, e.g. .fields.summary); repeat for multiple fields")
 	viewCmd.Flags().BoolP("web", "w", false, "open in browser")
 }
 
@@ -44,26 +44,26 @@ func viewRun(cmd *cobra.Command, args []string) error {
 	}
 
 	jsonFlag, _ := cmd.Flags().GetBool("json")
-	fieldFlag, _ := cmd.Flags().GetString("field")
+	fieldFlags, _ := cmd.Flags().GetStringArray("field")
 
-	if jsonFlag || fieldFlag != "" {
+	if jsonFlag || len(fieldFlags) > 0 {
 		raw, err := client.GetIssueRaw(ticket)
 		if err != nil {
 			return err
 		}
 
-		if fieldFlag != "" {
-			// Simple field extraction - parse JSON and navigate path
+		if len(fieldFlags) > 0 {
 			var data interface{}
 			if err := json.Unmarshal(raw, &data); err != nil {
 				return err
 			}
-			result := navigateJSON(data, fieldFlag)
-			if s, ok := result.(string); ok {
-				fmt.Println(s)
+			if len(fieldFlags) == 1 {
+				printField(navigateJSON(data, fieldFlags[0]), true)
 			} else {
-				out, _ := json.MarshalIndent(result, "", "  ")
-				fmt.Println(string(out))
+				for _, f := range fieldFlags {
+					fmt.Printf("%s: ", f)
+					printField(navigateJSON(data, f), false)
+				}
 			}
 			return nil
 		}
@@ -89,6 +89,20 @@ func viewRun(cmd *cobra.Command, args []string) error {
 
 	ui.PrintIssueDetail(issue, cfg.Jira.Instance)
 	return nil
+}
+
+func printField(v interface{}, indent bool) {
+	if s, ok := v.(string); ok {
+		fmt.Println(s)
+		return
+	}
+	var out []byte
+	if indent {
+		out, _ = json.MarshalIndent(v, "", "  ")
+	} else {
+		out, _ = json.Marshal(v)
+	}
+	fmt.Println(string(out))
 }
 
 // navigateJSON traverses a JSON structure using a dot-separated path.
