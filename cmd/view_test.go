@@ -1,6 +1,9 @@
 package cmd
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func TestNavigateJSON(t *testing.T) {
 	data := map[string]interface{}{
@@ -10,6 +13,14 @@ func TestNavigateJSON(t *testing.T) {
 				"name": "Open",
 			},
 			"labels": []interface{}{"bug", "critical"},
+			"issuelinks": []interface{}{
+				map[string]interface{}{
+					"outwardIssue": map[string]interface{}{"key": "LPS-1"},
+				},
+				map[string]interface{}{
+					"outwardIssue": map[string]interface{}{"key": "LPS-2"},
+				},
+			},
 		},
 		"key": "LPS-123",
 	}
@@ -49,6 +60,31 @@ func TestNavigateJSON(t *testing.T) {
 			path: "",
 			want: data,
 		},
+		{
+			name: "array iterate returns all elements",
+			path: ".fields.labels[]",
+			want: []interface{}{"bug", "critical"},
+		},
+		{
+			name: "array index first element",
+			path: ".fields.labels[0]",
+			want: "bug",
+		},
+		{
+			name: "array index second element",
+			path: ".fields.labels[1]",
+			want: "critical",
+		},
+		{
+			name: "array index out of range returns nil",
+			path: ".fields.labels[5]",
+			want: nil,
+		},
+		{
+			name: "iterate and pluck nested key",
+			path: ".fields.issuelinks[].outwardIssue.key",
+			want: []interface{}{"LPS-1", "LPS-2"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -60,11 +96,8 @@ func TestNavigateJSON(t *testing.T) {
 				}
 				return
 			}
-			// Compare string values
-			if s, ok := tt.want.(string); ok {
-				if got != s {
-					t.Errorf("navigateJSON(%q) = %v, want %q", tt.path, got, s)
-				}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("navigateJSON(%q) = %v, want %v", tt.path, got, tt.want)
 			}
 		})
 	}
@@ -79,6 +112,9 @@ func TestSplitPath(t *testing.T) {
 		{"key", []string{"key"}},
 		{"a.b.c.d", []string{"a", "b", "c", "d"}},
 		{"", nil},
+		{"fields.labels[]", []string{"fields", "labels", "[]"}},
+		{"fields.labels[0]", []string{"fields", "labels", "[0]"}},
+		{"fields.issuelinks[].outwardIssue.key", []string{"fields", "issuelinks", "[]", "outwardIssue", "key"}},
 	}
 
 	for _, tt := range tests {

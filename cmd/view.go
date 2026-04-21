@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/david-truong/liferay-issues-cli/internal/ui"
 	"github.com/pkg/browser"
@@ -90,50 +92,89 @@ func viewRun(cmd *cobra.Command, args []string) error {
 }
 
 // navigateJSON traverses a JSON structure using a dot-separated path.
-// Supports paths like ".fields.summary" or "fields.summary".
+// Supports paths like ".fields.summary", "fields.labels[0]", or
+// ".fields.issuelinks[].outwardIssue.key".
 func navigateJSON(data interface{}, path string) interface{} {
-	// Strip leading dot
 	if len(path) > 0 && path[0] == '.' {
 		path = path[1:]
 	}
-
 	if path == "" {
 		return data
 	}
-
-	parts := splitPath(path)
-	current := data
-
-	for _, part := range parts {
-		m, ok := current.(map[string]interface{})
-		if !ok {
-			fmt.Fprintf(os.Stderr, "cannot navigate into non-object at %q\n", part)
-			return nil
-		}
-		current, ok = m[part]
-		if !ok {
-			return nil
-		}
-	}
-
-	return current
+	return navigateParts(data, splitPath(path))
 }
 
+func navigateParts(data interface{}, parts []string) interface{} {
+	if len(parts) == 0 {
+		return data
+	}
+
+	part := parts[0]
+	rest := parts[1:]
+
+	if part == "[]" {
+		arr, ok := data.([]interface{})
+		if !ok {
+			fmt.Fprintf(os.Stderr, "cannot iterate non-array at \"[]\"\n")
+			return nil
+		}
+		if len(rest) == 0 {
+			return arr
+		}
+		var results []interface{}
+		for _, elem := range arr {
+			if r := navigateParts(elem, rest); r != nil {
+				results = append(results, r)
+			}
+		}
+		return results
+	}
+
+	if len(part) > 2 && part[0] == '[' && part[len(part)-1] == ']' {
+		idx, err := strconv.Atoi(part[1 : len(part)-1])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "invalid index %q\n", part)
+			return nil
+		}
+		arr, ok := data.([]interface{})
+		if !ok {
+			fmt.Fprintf(os.Stderr, "cannot index into non-array at %q\n", part)
+			return nil
+		}
+		if idx < 0 || idx >= len(arr) {
+			return nil
+		}
+		return navigateParts(arr[idx], rest)
+	}
+
+	m, ok := data.(map[string]interface{})
+	if !ok {
+		fmt.Fprintf(os.Stderr, "cannot navigate into non-object at %q\n", part)
+		return nil
+	}
+	val, ok := m[part]
+	if !ok {
+		return nil
+	}
+	return navigateParts(val, rest)
+}
+
+// splitPath converts a dotted path like "fields.issuelinks[].key" into tokens
+// ["fields", "issuelinks", "[]", "key"].
 func splitPath(path string) []string {
 	var parts []string
-	current := ""
-	for _, c := range path {
-		if c == '.' {
-			if current != "" {
-				parts = append(parts, current)
-				current = ""
-			}
-		} else {
-			current += string(c)
+	for _, seg := range strings.Split(path, ".") {
+		if seg == "" {
+			continue
 		}
-	}
-	if current != "" {
-		parts = append(parts, current)
+		if i := strings.Index(seg, "["); i >= 0 {
+			if i > 0 {
+				parts = append(parts, seg[:i])
+			}
+			parts = append(parts, seg[i:])
+		} else {
+			parts = append(parts, seg)
+		}
 	}
 	return parts
 }
