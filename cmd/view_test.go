@@ -1,6 +1,11 @@
 package cmd
 
-import "testing"
+import (
+	"bytes"
+	"io"
+	"os"
+	"testing"
+)
 
 func TestNavigateJSON(t *testing.T) {
 	data := map[string]interface{}{
@@ -68,6 +73,57 @@ func TestNavigateJSON(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestPrintADFResult(t *testing.T) {
+	capture := func(fn func()) string {
+		old := os.Stdout
+		r, w, _ := os.Pipe()
+		os.Stdout = w
+		fn()
+		w.Close()
+		os.Stdout = old
+		var buf bytes.Buffer
+		io.Copy(&buf, r)
+		return buf.String()
+	}
+
+	adfParagraph := func(text string) map[string]interface{} {
+		return map[string]interface{}{
+			"type": "doc",
+			"content": []interface{}{
+				map[string]interface{}{
+					"type": "paragraph",
+					"content": []interface{}{
+						map[string]interface{}{"type": "text", "text": text},
+					},
+				},
+			},
+		}
+	}
+
+	t.Run("plain string passes through unchanged", func(t *testing.T) {
+		got := capture(func() { printADFResult("hello") })
+		if got != "hello\n" {
+			t.Errorf("got %q, want %q", got, "hello\n")
+		}
+	})
+
+	t.Run("ADF document renders to plain text", func(t *testing.T) {
+		got := capture(func() { printADFResult(adfParagraph("Fix the bug")) })
+		if got != "Fix the bug\n" {
+			t.Errorf("got %q, want %q", got, "Fix the bug\n")
+		}
+	})
+
+	t.Run("array of ADF documents prints blocks separated by blank lines", func(t *testing.T) {
+		arr := []interface{}{adfParagraph("first"), adfParagraph("second")}
+		got := capture(func() { printADFResult(arr) })
+		want := "first\n\nsecond\n"
+		if got != want {
+			t.Errorf("got %q, want %q", got, want)
+		}
+	})
 }
 
 func TestSplitPath(t *testing.T) {

@@ -3,16 +3,16 @@ package ui
 import "testing"
 
 func TestExtractText_String(t *testing.T) {
-	got := extractText("plain text")
+	got := ExtractText("plain text")
 	if got != "plain text" {
-		t.Errorf("extractText(string) = %q, want 'plain text'", got)
+		t.Errorf("ExtractText(string) = %q, want 'plain text'", got)
 	}
 }
 
 func TestExtractText_Nil(t *testing.T) {
-	got := extractText(nil)
+	got := ExtractText(nil)
 	if got != "" {
-		t.Errorf("extractText(nil) = %q, want ''", got)
+		t.Errorf("ExtractText(nil) = %q, want ''", got)
 	}
 }
 
@@ -33,9 +33,9 @@ func TestExtractText_ADF_Paragraph(t *testing.T) {
 		},
 	}
 
-	got := extractText(adf)
+	got := ExtractText(adf)
 	if got != "Hello world" {
-		t.Errorf("extractText(ADF paragraph) = %q, want 'Hello world'", got)
+		t.Errorf("ExtractText(ADF paragraph) = %q, want 'Hello world'", got)
 	}
 }
 
@@ -59,10 +59,10 @@ func TestExtractText_ADF_MultipleParagraphs(t *testing.T) {
 		},
 	}
 
-	got := extractText(adf)
+	got := ExtractText(adf)
 	want := "First paragraph\nSecond paragraph"
 	if got != want {
-		t.Errorf("extractText(ADF multi-paragraph) = %q, want %q", got, want)
+		t.Errorf("ExtractText(ADF multi-paragraph) = %q, want %q", got, want)
 	}
 }
 
@@ -101,9 +101,9 @@ func TestExtractText_ADF_BulletList(t *testing.T) {
 		},
 	}
 
-	got := extractText(adf)
+	got := ExtractText(adf)
 	if got == "" {
-		t.Error("extractText(ADF bulletList) should not be empty")
+		t.Error("ExtractText(ADF bulletList) should not be empty")
 	}
 }
 
@@ -121,10 +121,10 @@ func TestExtractText_ADF_CodeBlock(t *testing.T) {
 		},
 	}
 
-	got := extractText(adf)
+	got := ExtractText(adf)
 	want := "```\nfmt.Println(\"hi\")\n```"
 	if got != want {
-		t.Errorf("extractText(ADF codeBlock) = %q, want %q", got, want)
+		t.Errorf("ExtractText(ADF codeBlock) = %q, want %q", got, want)
 	}
 }
 
@@ -147,9 +147,9 @@ func TestExtractText_ADF_InlineCard(t *testing.T) {
 		},
 	}
 
-	got := extractText(adf)
+	got := ExtractText(adf)
 	if got != "https://example.com" {
-		t.Errorf("extractText(ADF inlineCard) = %q, want 'https://example.com'", got)
+		t.Errorf("ExtractText(ADF inlineCard) = %q, want 'https://example.com'", got)
 	}
 }
 
@@ -172,8 +172,8 @@ func TestExtractText_ADF_Mention(t *testing.T) {
 		},
 	}
 
-	got := extractText(adf)
+	got := ExtractText(adf)
 	if got != "@johndoe" {
-		t.Errorf("extractText(ADF mention) = %q, want '@johndoe'", got)
+		t.Errorf("ExtractText(ADF mention) = %q, want '@johndoe'", got)
 	}
 }

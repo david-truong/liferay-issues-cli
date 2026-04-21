@@ -21,6 +21,7 @@ var viewCmd = &cobra.Command{
 func init() {
 	viewCmd.Flags().BoolP("json", "j", false, "output raw JSON")
 	viewCmd.Flags().StringP("field", "f", "", "extract a specific field (jq-style path, e.g. .fields.summary)")
+	viewCmd.Flags().BoolP("text", "t", false, "render the selected field's ADF body as plain text (requires --field)")
 	viewCmd.Flags().BoolP("web", "w", false, "open in browser")
 }
 
@@ -43,6 +44,14 @@ func viewRun(cmd *cobra.Command, args []string) error {
 
 	jsonFlag, _ := cmd.Flags().GetBool("json")
 	fieldFlag, _ := cmd.Flags().GetString("field")
+	textFlag, _ := cmd.Flags().GetBool("text")
+
+	if textFlag && fieldFlag == "" {
+		return fmt.Errorf("--text requires --field")
+	}
+	if textFlag && jsonFlag {
+		return fmt.Errorf("--text and --json are mutually exclusive")
+	}
 
 	if jsonFlag || fieldFlag != "" {
 		raw, err := client.GetIssueRaw(ticket)
@@ -51,12 +60,15 @@ func viewRun(cmd *cobra.Command, args []string) error {
 		}
 
 		if fieldFlag != "" {
-			// Simple field extraction - parse JSON and navigate path
 			var data interface{}
 			if err := json.Unmarshal(raw, &data); err != nil {
 				return err
 			}
 			result := navigateJSON(data, fieldFlag)
+			if textFlag {
+				printADFResult(result)
+				return nil
+			}
 			if s, ok := result.(string); ok {
 				fmt.Println(s)
 			} else {
@@ -87,6 +99,21 @@ func viewRun(cmd *cobra.Command, args []string) error {
 
 	ui.PrintIssueDetail(issue, cfg.Jira.Instance)
 	return nil
+}
+
+// printADFResult renders a field value (or slice of values) through the ADF
+// text extractor. Array results are printed as blocks separated by blank lines.
+func printADFResult(v interface{}) {
+	if arr, ok := v.([]interface{}); ok {
+		for i, elem := range arr {
+			fmt.Println(ui.ExtractText(elem))
+			if i < len(arr)-1 {
+				fmt.Println()
+			}
+		}
+		return
+	}
+	fmt.Println(ui.ExtractText(v))
 }
 
 // navigateJSON traverses a JSON structure using a dot-separated path.
