@@ -51,7 +51,7 @@ func PrintIssueDetail(issue *jira.Issue, instance string) {
 // PrintIssueTable prints a table of issues.
 func PrintIssueTable(issues []jira.Issue) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintf(w, "\033[1mKEY\tSTATUS\tTYPE\tASSIGNEE\tSUMMARY\033[0m\n")
+	fmt.Fprintf(w, "\033[1mKEY\tSTATUS\tTYPE\tAFFECTS\tFIX VERSION\tASSIGNEE\tSUMMARY\033[0m\n")
 
 	for _, issue := range issues {
 		status := ""
@@ -62,6 +62,8 @@ func PrintIssueTable(issues []jira.Issue) {
 		if issue.Fields.IssueType != nil {
 			issueType = issue.Fields.IssueType.Name
 		}
+		affects := joinVersionNames(issue.Fields.Versions)
+		fixVersion := joinVersionNames(issue.Fields.FixVersions)
 		assignee := "Unassigned"
 		if issue.Fields.Assignee != nil {
 			assignee = issue.Fields.Assignee.DisplayName
@@ -72,10 +74,21 @@ func PrintIssueTable(issues []jira.Issue) {
 			summary = summary[:57] + "..."
 		}
 
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\n",
-			issue.Key, status, issueType, assignee, summary)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n",
+			issue.Key, status, issueType, affects, fixVersion, assignee, summary)
 	}
 	w.Flush()
+}
+
+func joinVersionNames(versions []jira.Version) string {
+	if len(versions) == 0 {
+		return ""
+	}
+	var names []string
+	for _, v := range versions {
+		names = append(names, v.Name)
+	}
+	return strings.Join(names, ", ")
 }
 
 // PrintComments prints a list of comments.

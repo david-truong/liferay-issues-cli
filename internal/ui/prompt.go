@@ -218,6 +218,39 @@ func SelectSprint(sprints []jira.Sprint) (*jira.Sprint, error) {
 	return nil, fmt.Errorf("sprint not found")
 }
 
+// SelectComponent prompts the user to select a component from a list.
+func SelectComponent(components []jira.Component) (*jira.Component, error) {
+	if len(components) == 0 {
+		return nil, fmt.Errorf("no components available")
+	}
+
+	var options []huh.Option[string]
+	for _, c := range components {
+		options = append(options, huh.NewOption(c.Name, c.ID))
+	}
+
+	var selected string
+	form := huh.NewForm(
+		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Select component").
+				Options(options...).
+				Value(&selected),
+		),
+	)
+
+	if err := form.Run(); err != nil {
+		return nil, err
+	}
+
+	for _, c := range components {
+		if c.ID == selected {
+			return &c, nil
+		}
+	}
+	return nil, fmt.Errorf("component not found")
+}
+
 // FindSprintByName finds a sprint by fuzzy name matching.
 func FindSprintByName(sprints []jira.Sprint, name string) []jira.Sprint {
 	if name == "" {

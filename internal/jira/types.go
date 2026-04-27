@@ -22,6 +22,8 @@ type Fields struct {
 	Project     *Project    `json:"project,omitempty"`
 	Labels      []string    `json:"labels,omitempty"`
 	Components  []Component `json:"components,omitempty"`
+	Versions    []Version   `json:"versions,omitempty"`
+	FixVersions []Version   `json:"fixVersions,omitempty"`
 	Created     string      `json:"created,omitempty"`
 	Updated     string      `json:"updated,omitempty"`
 	Comment     *Comments   `json:"comment,omitempty"`
@@ -58,6 +60,14 @@ type Project struct {
 type Component struct {
 	Name string `json:"name"`
 	ID   string `json:"id"`
+}
+
+// Version represents a Jira project version (used for affects versions and fix versions).
+type Version struct {
+	Name        string `json:"name"`
+	ID          string `json:"id"`
+	ReleaseDate string `json:"releaseDate,omitempty"`
+	Released    bool   `json:"released,omitempty"`
 }
 
 type Comments struct {
