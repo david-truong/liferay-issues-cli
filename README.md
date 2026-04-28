@@ -160,6 +160,9 @@ issues find "login" --after 7.3.0 --before 7.4.3
 # Include tickets with master fix version by creation date
 issues find "login" --after 7.4.0 --include-master -p LPD
 
+# Sort results (default is relevance; options: updated, created, priority, key, status, assignee, summary, issuetype, resolution)
+issues find "login" --order-by updated
+
 # More results
 issues find "login" -n 50
 ```
