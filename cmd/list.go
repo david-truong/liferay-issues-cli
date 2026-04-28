@@ -12,7 +12,7 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List Jira issues",
-	Long:  "Search for Jira issues using filters or raw JQL.",
+	Long:  "List Jira issues using structural filters. For raw JQL, use `issues jql`.",
 	RunE:  listRun,
 }
 
@@ -20,7 +20,6 @@ func init() {
 	listCmd.Flags().StringP("project", "p", "", "filter by project")
 	listCmd.Flags().StringP("assignee", "a", "", "filter by assignee (use 'me' for current user)")
 	listCmd.Flags().String("status", "", "filter by status")
-	listCmd.Flags().String("jql", "", "raw JQL query (overrides other filters)")
 	listCmd.Flags().IntP("limit", "n", 20, "max results")
 	listCmd.Flags().String("board", "", "list issues on a board (ID or name)")
 	listCmd.Flags().String("sprint", "", "list issues in a sprint (ID or name)")
@@ -84,13 +83,9 @@ func listRun(cmd *cobra.Command, args []string) error {
 	}
 
 	// Standard JQL search
-	jql, _ := cmd.Flags().GetString("jql")
-
+	jql := buildFilterJQL(cmd, true)
 	if jql == "" {
-		jql = buildFilterJQL(cmd, true)
-		if jql == "" {
-			return fmt.Errorf("provide at least one filter (--project, --assignee, --status, --board, --sprint) or use --jql")
-		}
+		return fmt.Errorf("provide at least one filter (--project, --assignee, --status, --board, --sprint), or use `issues jql` for raw JQL")
 	}
 
 	result, err := client.Search(jql, limit, 0)

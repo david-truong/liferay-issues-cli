@@ -124,9 +124,6 @@ issues list -a me
 # Filter by project and status
 issues list -p LPD --status "In Progress"
 
-# Raw JQL
-issues list --jql "project = LPD AND assignee = currentUser() ORDER BY updated DESC"
-
 # Limit results
 issues list -a me -n 50
 ```
@@ -165,6 +162,16 @@ issues find "login" --order-by updated
 
 # More results
 issues find "login" -n 50
+```
+
+### Raw JQL
+
+```sh
+# Cross-project query
+issues jql 'project in (LPD, LPS) AND assignee = currentUser() AND status != Closed'
+
+# Custom field filter
+issues jql 'project = LPD AND "Epic Link" = LPD-12345'
 ```
 
 ### Comments
