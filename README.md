@@ -131,37 +131,37 @@ issues list --jql "project = LPD AND assignee = currentUser() ORDER BY updated D
 issues list -a me -n 50
 ```
 
-### Search issues
+### Find issues
 
 ```sh
 # Find issues by text (searches summary, description, comments)
-issues search "login"
+issues find "login"
 
 # Narrow to a project
-issues search "login" -p LPD
+issues find "login" -p LPD
 
 # Combine with filters
-issues search "login" -t Bug -a me
+issues find "login" -t Bug -a me
 
 # Filter by component
-issues search "login" -c "REST Builder"
+issues find "login" -c "REST Builder"
 
 # Only closed/fixed issues
-issues search "login" --fixed
+issues find "login" --fixed
 
 # Filter by status and resolution separately
-issues search "login" --status Closed -r Fixed
+issues find "login" --status Closed -r Fixed
 
 # Filter by fix version range
-issues search "login" --after 7.4.0
-issues search "login" --before 7.3.10
-issues search "login" --after 7.3.0 --before 7.4.3
+issues find "login" --after 7.4.0
+issues find "login" --before 7.3.10
+issues find "login" --after 7.3.0 --before 7.4.3
 
 # Include tickets with master fix version by creation date
-issues search "login" --after 7.4.0 --include-master -p LPD
+issues find "login" --after 7.4.0 --include-master -p LPD
 
 # More results
-issues search "login" -n 50
+issues find "login" -n 50
 ```
 
 ### Comments

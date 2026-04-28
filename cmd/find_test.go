@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newSearchCmd() *cobra.Command {
-	cmd := &cobra.Command{Use: "search", RunE: func(cmd *cobra.Command, args []string) error { return nil }}
+func newFindCmd() *cobra.Command {
+	cmd := &cobra.Command{Use: "find", RunE: func(cmd *cobra.Command, args []string) error { return nil }}
 	cmd.Flags().StringP("project", "p", "", "")
 	cmd.Flags().StringP("assignee", "a", "", "")
 	cmd.Flags().String("status", "", "")
@@ -26,7 +26,7 @@ func newSearchCmd() *cobra.Command {
 	return cmd
 }
 
-func TestBuildSearchJQL(t *testing.T) {
+func TestBuildFindJQL(t *testing.T) {
 	// Save and restore global cfg
 	origCfg := cfg
 	cfg = &config.Config{}
@@ -157,7 +157,7 @@ func TestBuildSearchJQL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cmd := newSearchCmd()
+			cmd := newFindCmd()
 
 			for k, v := range tt.flags {
 				cmd.Flags().Set(k, v)
@@ -165,13 +165,13 @@ func TestBuildSearchJQL(t *testing.T) {
 
 			cfg.Jira = tt.cfg
 
-			got, err := buildSearchJQL(cmd, tt.query, false)
+			got, err := buildFindJQL(cmd, tt.query, false)
 			if err != nil {
-				t.Fatalf("buildSearchJQL() error = %v", err)
+				t.Fatalf("buildFindJQL() error = %v", err)
 			}
 
 			if got != tt.want {
-				t.Errorf("buildSearchJQL() =\n  %q\nwant:\n  %q", got, tt.want)
+				t.Errorf("buildFindJQL() =\n  %q\nwant:\n  %q", got, tt.want)
 			}
 		})
 	}

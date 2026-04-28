@@ -9,42 +9,42 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var searchCmd = &cobra.Command{
-	Use:   "search <query>",
-	Short: "Search for Jira issues by text",
-	Long: `Search for Jira issues using full-text search across summary,
+var findCmd = &cobra.Command{
+	Use:   "find <query>",
+	Short: "Find Jira issues by text",
+	Long: `Find Jira issues using full-text search across summary,
 description, comments, and other text fields.
 
 Examples:
-  issues search "login timeout"
-  issues search "null pointer" -p LPD
-  issues search "Safari crash" -t Bug -a me
-  issues search "API error" -c "REST Builder"
-  issues search "login" -v 7.4.0
-  issues search "login" --fixed
-  issues search "login" --after 7.4.0 --include-master -p LPD`,
+  issues find "login timeout"
+  issues find "null pointer" -p LPD
+  issues find "Safari crash" -t Bug -a me
+  issues find "API error" -c "REST Builder"
+  issues find "login" -v 7.4.0
+  issues find "login" --fixed
+  issues find "login" --after 7.4.0 --include-master -p LPD`,
 	Args: cobra.ExactArgs(1),
-	RunE: searchRun,
+	RunE: findRun,
 }
 
 func init() {
-	searchCmd.Flags().StringP("project", "p", "", "filter by project")
-	searchCmd.Flags().StringP("assignee", "a", "", "filter by assignee (use 'me' for current user)")
-	searchCmd.Flags().String("status", "", "filter by status")
-	searchCmd.Flags().StringP("type", "t", "", "filter by issue type (Bug, Story, Task, etc.)")
-	searchCmd.Flags().StringP("component", "c", "", "filter by component (overrides default from config)")
-	searchCmd.Flags().StringP("label", "l", "", "filter by label")
-	searchCmd.Flags().StringP("resolution", "r", "", "filter by resolution (e.g. Fixed, Duplicate)")
-	searchCmd.Flags().Bool("fixed", false, "shorthand for --status Closed --resolution Fixed")
-	searchCmd.Flags().StringP("version", "v", "", "filter by exact affects version")
-	searchCmd.Flags().String("after", "", "fix version >= this version")
-	searchCmd.Flags().String("before", "", "fix version <= this version")
-	searchCmd.Flags().Bool("include-master", false, "include master-version tickets by creation date (requires --project or default project)")
-	searchCmd.Flags().IntP("limit", "n", 20, "max results")
-	searchCmd.Flags().String("order-by", "", "override sort order (e.g. updated, created, priority)")
+	findCmd.Flags().StringP("project", "p", "", "filter by project")
+	findCmd.Flags().StringP("assignee", "a", "", "filter by assignee (use 'me' for current user)")
+	findCmd.Flags().String("status", "", "filter by status")
+	findCmd.Flags().StringP("type", "t", "", "filter by issue type (Bug, Story, Task, etc.)")
+	findCmd.Flags().StringP("component", "c", "", "filter by component (overrides default from config)")
+	findCmd.Flags().StringP("label", "l", "", "filter by label")
+	findCmd.Flags().StringP("resolution", "r", "", "filter by resolution (e.g. Fixed, Duplicate)")
+	findCmd.Flags().Bool("fixed", false, "shorthand for --status Closed --resolution Fixed")
+	findCmd.Flags().StringP("version", "v", "", "filter by exact affects version")
+	findCmd.Flags().String("after", "", "fix version >= this version")
+	findCmd.Flags().String("before", "", "fix version <= this version")
+	findCmd.Flags().Bool("include-master", false, "include master-version tickets by creation date (requires --project or default project)")
+	findCmd.Flags().IntP("limit", "n", 20, "max results")
+	findCmd.Flags().String("order-by", "", "override sort order (e.g. updated, created, priority)")
 }
 
-func searchRun(cmd *cobra.Command, args []string) error {
+func findRun(cmd *cobra.Command, args []string) error {
 	if err := initClient(); err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func searchRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	jql, err := buildSearchJQL(cmd, query, includeMaster)
+	jql, err := buildFindJQL(cmd, query, includeMaster)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func searchRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func buildSearchJQL(cmd *cobra.Command, query string, includeMaster bool) (string, error) {
+func buildFindJQL(cmd *cobra.Command, query string, includeMaster bool) (string, error) {
 	var clauses []string
 
 	// Primary text search clause
