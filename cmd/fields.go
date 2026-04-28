@@ -6,6 +6,16 @@ import (
 	"strings"
 )
 
+const pullRequestField = "customfield_10201"
+
+// assigneeClause renders an assignee JQL clause, treating "me" as currentUser().
+func assigneeClause(v string) string {
+	if v == "me" {
+		return "assignee = currentUser()"
+	}
+	return fmt.Sprintf("assignee = %q", v)
+}
+
 // parseFieldValue attempts to parse v as JSON if it looks like an object or
 // array. Otherwise it returns v as a plain string. This lets --field accept
 // both simple strings and structured values like {"value":"foo"}.

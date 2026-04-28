@@ -69,44 +69,27 @@ func findRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if len(result.Issues) == 0 {
-		fmt.Println("No issues found.")
-		return nil
-	}
-
-	ui.PrintIssueTable(result.Issues)
-	if result.Total > len(result.Issues) {
-		fmt.Printf("\nShowing %d of %d results\n", len(result.Issues), result.Total)
-	}
+	ui.PrintSearchResults(result.Issues, result.Total)
 	return nil
 }
 
 func buildFindJQL(cmd *cobra.Command, query string, includeMaster bool) (string, error) {
 	var clauses []string
 
-	// Primary text search clause
 	clauses = append(clauses, fmt.Sprintf("text ~ %q", query))
 
-	// Project
 	project, _ := cmd.Flags().GetString("project")
 	if project != "" {
 		clauses = append(clauses, fmt.Sprintf("project = %q", project))
 	}
 
-	// Assignee
 	if v, _ := cmd.Flags().GetString("assignee"); v != "" {
-		if v == "me" {
-			clauses = append(clauses, "assignee = currentUser()")
-		} else {
-			clauses = append(clauses, fmt.Sprintf("assignee = %q", v))
-		}
+		clauses = append(clauses, assigneeClause(v))
 	}
 
 	// --fixed shorthand overrides --status and --resolution
-	fixed, _ := cmd.Flags().GetBool("fixed")
-	if fixed {
-		clauses = append(clauses, fmt.Sprintf("status = %q", "Closed"))
-		clauses = append(clauses, fmt.Sprintf("resolution = %q", "Fixed"))
+	if fixed, _ := cmd.Flags().GetBool("fixed"); fixed {
+		clauses = append(clauses, `status = "Closed"`, `resolution = "Fixed"`)
 	} else {
 		if v, _ := cmd.Flags().GetString("status"); v != "" {
 			clauses = append(clauses, fmt.Sprintf("status = %q", v))
@@ -116,29 +99,24 @@ func buildFindJQL(cmd *cobra.Command, query string, includeMaster bool) (string,
 		}
 	}
 
-	// Issue type
 	if v, _ := cmd.Flags().GetString("type"); v != "" {
 		clauses = append(clauses, fmt.Sprintf("issuetype = %q", v))
 	}
 
-	// Component: flag overrides config default
 	if v, _ := cmd.Flags().GetString("component"); v != "" {
 		clauses = append(clauses, fmt.Sprintf("component = %q", v))
 	} else if cfg.Jira.DefaultComponent != "" {
 		clauses = append(clauses, fmt.Sprintf("component = %q", cfg.Jira.DefaultComponent))
 	}
 
-	// Label
 	if v, _ := cmd.Flags().GetString("label"); v != "" {
 		clauses = append(clauses, fmt.Sprintf("labels = %q", v))
 	}
 
-	// Exact version filter
 	if v, _ := cmd.Flags().GetString("version"); v != "" {
 		clauses = append(clauses, fmt.Sprintf("affectedVersion = %q", v))
 	}
 
-	// Version range filters
 	after, _ := cmd.Flags().GetString("after")
 	before, _ := cmd.Flags().GetString("before")
 

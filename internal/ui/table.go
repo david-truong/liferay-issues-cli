@@ -48,6 +48,19 @@ func PrintIssueDetail(issue *jira.Issue, instance string) {
 	}
 }
 
+// PrintSearchResults renders a search result set, including a "no results"
+// message and a truncation footer when total > len(issues).
+func PrintSearchResults(issues []jira.Issue, total int) {
+	if len(issues) == 0 {
+		fmt.Println("No issues found.")
+		return
+	}
+	PrintIssueTable(issues)
+	if total > len(issues) {
+		fmt.Printf("\nShowing %d of %d results\n", len(issues), total)
+	}
+}
+
 // PrintIssueTable prints a table of issues.
 func PrintIssueTable(issues []jira.Issue) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)

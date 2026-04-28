@@ -39,7 +39,6 @@ func (c *Client) do(method, path string, body interface{}) ([]byte, error) {
 	return c.doWithBase(c.BaseURL, method, path, body)
 }
 
-
 func (c *Client) doWithBase(baseURL, method, path string, body interface{}) ([]byte, error) {
 	var bodyReader io.Reader
 	var reqData []byte

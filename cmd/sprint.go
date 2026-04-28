@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/david-truong/liferay-issues-cli/internal/jira"
 	"github.com/david-truong/liferay-issues-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -48,7 +49,8 @@ func sprintListRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	boardID, err := resolveBoard(cmd)
+	boardFlag, _ := cmd.Flags().GetString("board")
+	boardID, err := resolveBoard(boardFlag)
 	if err != nil {
 		return err
 	}
@@ -88,51 +90,41 @@ func sprintViewRun(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-// resolveBoard resolves a board ID from the --board flag.
-// Falls back to: config default_board → scrum boards for default project → prompt.
-func resolveBoard(cmd *cobra.Command) (int, error) {
-	boardFlag, _ := cmd.Flags().GetString("board")
-
-	if boardFlag != "" {
-		if id, err := strconv.Atoi(boardFlag); err == nil {
+// resolveBoard resolves a board ID from a flag value (numeric ID, name search,
+// or empty to fall back to config default → scrum boards for default project).
+func resolveBoard(value string) (int, error) {
+	if value != "" {
+		if id, err := strconv.Atoi(value); err == nil {
 			return id, nil
 		}
-		// Search by name
-		boards, err := client.GetBoards("", boardFlag, "")
+		boards, err := client.GetBoards("", value, "")
 		if err != nil {
 			return 0, fmt.Errorf("searching boards: %w", err)
 		}
 		if len(boards) == 0 {
-			return 0, fmt.Errorf("no board found matching %q", boardFlag)
+			return 0, fmt.Errorf("no board found matching %q", value)
 		}
-		if len(boards) == 1 {
-			return boards[0].ID, nil
-		}
-		selected, err := ui.SelectBoard(boards)
-		if err != nil {
-			return 0, err
-		}
-		return selected.ID, nil
+		return pickBoard(boards)
 	}
 
-	// Default: check config
 	if cfg.Jira.DefaultBoard > 0 {
 		return cfg.Jira.DefaultBoard, nil
 	}
 
-	// Fall back: scrum boards for the default project
-	project := cfg.Jira.DefaultProject
-	boards, err := client.GetBoards("scrum", "", project)
+	boards, err := client.GetBoards("scrum", "", cfg.Jira.DefaultProject)
 	if err != nil {
 		return 0, fmt.Errorf("fetching boards: %w", err)
 	}
 	if len(boards) == 0 {
 		return 0, fmt.Errorf("no scrum boards found — use --board or set jira.default_board in config")
 	}
+	return pickBoard(boards)
+}
+
+func pickBoard(boards []jira.Board) (int, error) {
 	if len(boards) == 1 {
 		return boards[0].ID, nil
 	}
-
 	selected, err := ui.SelectBoard(boards)
 	if err != nil {
 		return 0, err
@@ -147,8 +139,7 @@ func resolveSprintFlag(value string) (int, error) {
 		return id, nil
 	}
 
-	// Resolve the default board first
-	boardID, err := resolveBoardDefault()
+	boardID, err := resolveBoard("")
 	if err != nil {
 		return 0, fmt.Errorf("resolving board for sprint search: %w", err)
 	}
@@ -167,31 +158,6 @@ func resolveSprintFlag(value string) (int, error) {
 	}
 
 	selected, err := ui.SelectSprint(matches)
-	if err != nil {
-		return 0, err
-	}
-	return selected.ID, nil
-}
-
-// resolveBoardDefault resolves a board without a cobra command (for --sprint flag on update).
-func resolveBoardDefault() (int, error) {
-	if cfg.Jira.DefaultBoard > 0 {
-		return cfg.Jira.DefaultBoard, nil
-	}
-
-	project := cfg.Jira.DefaultProject
-	boards, err := client.GetBoards("scrum", "", project)
-	if err != nil {
-		return 0, fmt.Errorf("fetching boards: %w", err)
-	}
-	if len(boards) == 0 {
-		return 0, fmt.Errorf("no scrum boards found — set jira.default_board in config")
-	}
-	if len(boards) == 1 {
-		return boards[0].ID, nil
-	}
-
-	selected, err := ui.SelectBoard(boards)
 	if err != nil {
 		return 0, err
 	}

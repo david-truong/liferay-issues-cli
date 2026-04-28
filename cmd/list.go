@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/david-truong/liferay-issues-cli/internal/ui"
@@ -57,7 +56,7 @@ func listRun(cmd *cobra.Command, args []string) error {
 
 	// Board mode: use Agile API to list board issues
 	if boardFlag != "" {
-		boardID, err := resolveBoardFlag(boardFlag)
+		boardID, err := resolveBoard(boardFlag)
 		if err != nil {
 			return err
 		}
@@ -70,15 +69,7 @@ func listRun(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		if len(issues) == 0 {
-			fmt.Println("No issues found.")
-			return nil
-		}
-
-		ui.PrintIssueTable(issues)
-		if total > len(issues) {
-			fmt.Printf("\nShowing %d of %d results\n", len(issues), total)
-		}
+		ui.PrintSearchResults(issues, total)
 		return nil
 	}
 
@@ -93,15 +84,7 @@ func listRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if len(result.Issues) == 0 {
-		fmt.Println("No issues found.")
-		return nil
-	}
-
-	ui.PrintIssueTable(result.Issues)
-	if result.Total > len(result.Issues) {
-		fmt.Printf("\nShowing %d of %d results\n", len(result.Issues), result.Total)
-	}
+	ui.PrintSearchResults(result.Issues, result.Total)
 	return nil
 }
 
@@ -117,11 +100,7 @@ func buildFilterJQL(cmd *cobra.Command, requireProject bool) string {
 	}
 
 	if v, _ := cmd.Flags().GetString("assignee"); v != "" {
-		if v == "me" {
-			clauses = append(clauses, "assignee = currentUser()")
-		} else {
-			clauses = append(clauses, fmt.Sprintf("assignee = %q", v))
-		}
+		clauses = append(clauses, assigneeClause(v))
 	}
 
 	if v, _ := cmd.Flags().GetString("status"); v != "" {
@@ -135,26 +114,3 @@ func buildFilterJQL(cmd *cobra.Command, requireProject bool) string {
 	return strings.Join(clauses, " AND ") + " ORDER BY updated DESC"
 }
 
-// resolveBoardFlag resolves a board ID from a flag value (numeric ID or name search).
-func resolveBoardFlag(value string) (int, error) {
-	if id, err := strconv.Atoi(value); err == nil {
-		return id, nil
-	}
-
-	boards, err := client.GetBoards("", value, "")
-	if err != nil {
-		return 0, fmt.Errorf("searching boards: %w", err)
-	}
-	if len(boards) == 0 {
-		return 0, fmt.Errorf("no board found matching %q", value)
-	}
-	if len(boards) == 1 {
-		return boards[0].ID, nil
-	}
-
-	selected, err := ui.SelectBoard(boards)
-	if err != nil {
-		return 0, err
-	}
-	return selected.ID, nil
-}

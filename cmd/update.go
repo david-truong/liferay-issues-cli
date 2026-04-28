@@ -110,7 +110,7 @@ func updateRun(cmd *cobra.Command, args []string) error {
 	}
 
 	if v, _ := cmd.Flags().GetString("pull-request"); v != "" {
-		fields["customfield_10201"] = v
+		fields[pullRequestField] = v
 	}
 
 	if v, _ := cmd.Flags().GetString("fix-version"); v != "" {

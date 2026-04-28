@@ -72,7 +72,7 @@ func transitionRun(cmd *cobra.Command, args []string) error {
 	fields := map[string]interface{}{}
 
 	if v, _ := cmd.Flags().GetString("pull-request"); v != "" {
-		fields["customfield_10201"] = v
+		fields[pullRequestField] = v
 	}
 
 	if v, _ := cmd.Flags().GetString("fix-version"); v != "" {

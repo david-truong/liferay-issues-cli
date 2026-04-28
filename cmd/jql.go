@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/david-truong/liferay-issues-cli/internal/ui"
 	"github.com/spf13/cobra"
 )
@@ -31,14 +29,6 @@ func jqlRun(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if len(result.Issues) == 0 {
-		fmt.Println("No issues found.")
-		return nil
-	}
-
-	ui.PrintIssueTable(result.Issues)
-	if result.Total > len(result.Issues) {
-		fmt.Printf("\nShowing %d of %d results\n", len(result.Issues), result.Total)
-	}
+	ui.PrintSearchResults(result.Issues, result.Total)
 	return nil
 }
