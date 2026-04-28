@@ -142,14 +142,11 @@ func buildFindJQL(cmd *cobra.Command, query string, includeMaster bool) (string,
 	after, _ := cmd.Flags().GetString("after")
 	before, _ := cmd.Flags().GetString("before")
 
-	if includeMaster && after == "" && before == "" {
-		return "", fmt.Errorf("--include-master requires --after or --before")
-	}
-
-	if includeMaster && (after != "" || before != "") {
-		// Build a grouped clause: (version range OR (master AND created in date range))
-		err := addVersionRangeWithMaster(&clauses, after, before, project)
-		if err != nil {
+	if includeMaster {
+		if after == "" && before == "" {
+			return "", fmt.Errorf("--include-master requires --after or --before")
+		}
+		if err := addVersionRangeWithMaster(&clauses, after, before, project); err != nil {
 			return "", err
 		}
 	} else {
