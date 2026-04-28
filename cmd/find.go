@@ -142,6 +142,10 @@ func buildFindJQL(cmd *cobra.Command, query string, includeMaster bool) (string,
 	after, _ := cmd.Flags().GetString("after")
 	before, _ := cmd.Flags().GetString("before")
 
+	if includeMaster && after == "" && before == "" {
+		return "", fmt.Errorf("--include-master requires --after or --before")
+	}
+
 	if includeMaster && (after != "" || before != "") {
 		// Build a grouped clause: (version range OR (master AND created in date range))
 		err := addVersionRangeWithMaster(&clauses, after, before, project)
@@ -201,14 +205,17 @@ func addVersionRangeWithMaster(clauses *[]string, after, before, project string)
 	versionRange := strings.Join(versionClauses, " AND ")
 
 	// Build the master date range part
-	masterClause := buildMasterDateClause(versions, after, before)
+	masterClause, err := buildMasterDateClause(versions, after, before)
+	if err != nil {
+		return err
+	}
 
 	*clauses = append(*clauses, "("+versionRange+" OR (fixVersion = \"master\" AND "+masterClause+"))")
 
 	return nil
 }
 
-func buildMasterDateClause(versions []jira.Version, after, before string) string {
+func buildMasterDateClause(versions []jira.Version, after, before string) (string, error) {
 	versionDates := make(map[string]string)
 	for _, v := range versions {
 		if v.ReleaseDate != "" {
@@ -219,23 +226,22 @@ func buildMasterDateClause(versions []jira.Version, after, before string) string
 	var dateClauses []string
 
 	if after != "" {
-		if date, ok := versionDates[after]; ok {
-			dateClauses = append(dateClauses, fmt.Sprintf("created >= %q", date))
+		date, ok := versionDates[after]
+		if !ok {
+			return "", fmt.Errorf("cannot resolve release date for version %q (needed for --include-master)", after)
 		}
+		dateClauses = append(dateClauses, fmt.Sprintf("created >= %q", date))
 	}
 
 	if before != "" {
-		if date, ok := versionDates[before]; ok {
-			dateClauses = append(dateClauses, fmt.Sprintf("created <= %q", date))
+		date, ok := versionDates[before]
+		if !ok {
+			return "", fmt.Errorf("cannot resolve release date for version %q (needed for --include-master)", before)
 		}
+		dateClauses = append(dateClauses, fmt.Sprintf("created <= %q", date))
 	}
 
-	if len(dateClauses) == 0 {
-		// If we can't find release dates, just include all master tickets
-		return "fixVersion = \"master\""
-	}
-
-	return strings.Join(dateClauses, " AND ")
+	return strings.Join(dateClauses, " AND "), nil
 }
 
 // resolveComponentFlag resolves a partial component name to the full Jira component name.

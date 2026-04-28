@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/david-truong/liferay-issues-cli/internal/config"
+	"github.com/david-truong/liferay-issues-cli/internal/jira"
 	"github.com/spf13/cobra"
 )
 
@@ -172,6 +174,111 @@ func TestBuildFindJQL(t *testing.T) {
 
 			if got != tt.want {
 				t.Errorf("buildFindJQL() =\n  %q\nwant:\n  %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBuildFindJQL_IncludeMasterRequiresBounds(t *testing.T) {
+	origCfg := cfg
+	cfg = &config.Config{}
+	defer func() { cfg = origCfg }()
+
+	cmd := newFindCmd()
+	_, err := buildFindJQL(cmd, "login", true)
+	if err == nil {
+		t.Fatal("expected error when --include-master is set without --after/--before")
+	}
+	if !strings.Contains(err.Error(), "--include-master") {
+		t.Errorf("unexpected error %q", err.Error())
+	}
+}
+
+func TestBuildMasterDateClause(t *testing.T) {
+	versions := []jira.Version{
+		{Name: "7.4.0", ReleaseDate: "2023-01-01"},
+		{Name: "7.4.3", ReleaseDate: "2023-06-01"},
+		{Name: "7.5.0"}, // no release date
+	}
+
+	tests := []struct {
+		name      string
+		after     string
+		before    string
+		want      string
+		wantErr   bool
+		errSubstr string
+	}{
+		{name: "both bounds resolve", after: "7.4.0", before: "7.4.3", want: `created >= "2023-01-01" AND created <= "2023-06-01"`},
+		{name: "only after", after: "7.4.0", want: `created >= "2023-01-01"`},
+		{name: "only before", before: "7.4.3", want: `created <= "2023-06-01"`},
+		{name: "empty bounds", want: ""},
+		{name: "after has no release date", after: "7.5.0", wantErr: true, errSubstr: "7.5.0"},
+		{name: "before has no release date", before: "7.5.0", wantErr: true, errSubstr: "7.5.0"},
+		{name: "after unknown", after: "9.9.9", wantErr: true, errSubstr: "9.9.9"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := buildMasterDateClause(versions, tt.after, tt.before)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil (result %q)", got)
+				}
+				if tt.errSubstr != "" && !strings.Contains(err.Error(), tt.errSubstr) {
+					t.Errorf("error %q does not contain %q", err.Error(), tt.errSubstr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestResolveComponentName(t *testing.T) {
+	components := []jira.Component{
+		{Name: "Frontend Infrastructure"},
+		{Name: "REST Builder"},
+		{Name: "Site Management"},
+		{Name: "Site Templates"},
+	}
+
+	tests := []struct {
+		name      string
+		input     string
+		want      string
+		wantErr   bool
+		errSubstr string
+	}{
+		{name: "exact match", input: "REST Builder", want: "REST Builder"},
+		{name: "case-insensitive exact", input: "rest builder", want: "REST Builder"},
+		{name: "single contains", input: "frontend", want: "Frontend Infrastructure"},
+		{name: "ambiguous contains", input: "site", wantErr: true, errSubstr: "ambiguous"},
+		{name: "no match returns input", input: "Nonexistent", want: "Nonexistent"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := resolveComponentName(tt.input, components)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("expected error, got nil (result %q)", got)
+				}
+				if tt.errSubstr != "" && !strings.Contains(err.Error(), tt.errSubstr) {
+					t.Errorf("error %q does not contain %q", err.Error(), tt.errSubstr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if got != tt.want {
+				t.Errorf("got %q, want %q", got, tt.want)
 			}
 		})
 	}
