@@ -48,6 +48,7 @@ func init() {
 	rootCmd.AddCommand(openCmd)
 	rootCmd.AddCommand(boardCmd)
 	rootCmd.AddCommand(sprintCmd)
+	rootCmd.AddCommand(findCmd)
 	rootCmd.AddCommand(configCmd)
 }
 

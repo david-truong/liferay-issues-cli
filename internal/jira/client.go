@@ -203,7 +203,7 @@ func (c *Client) Search(jql string, maxResults int, startAt int) (*SearchResult,
 	params.Set("jql", jql)
 	params.Set("maxResults", fmt.Sprintf("%d", maxResults))
 	params.Set("startAt", fmt.Sprintf("%d", startAt))
-	params.Set("fields", "summary,status,issuetype,priority,assignee,reporter,labels,components,created,updated,comment,parent,project,description")
+	params.Set("fields", "summary,status,issuetype,priority,assignee,reporter,labels,components,versions,fixVersions,created,updated,comment,parent,project,description")
 
 	data, err := c.do("GET", "/search/jql?"+params.Encode(), nil)
 	if err != nil {
@@ -265,6 +265,34 @@ func (c *Client) GetIssueTypes(projectKey string) ([]IssueType, error) {
 		return nil, fmt.Errorf("parsing project: %w", err)
 	}
 	return project.IssueTypes, nil
+}
+
+// GetProjectComponents fetches all components for a project.
+func (c *Client) GetProjectComponents(projectKey string) ([]Component, error) {
+	data, err := c.do("GET", "/project/"+url.PathEscape(projectKey)+"/components", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var components []Component
+	if err := json.Unmarshal(data, &components); err != nil {
+		return nil, fmt.Errorf("parsing components: %w", err)
+	}
+	return components, nil
+}
+
+// GetProjectVersions fetches all versions for a project.
+func (c *Client) GetProjectVersions(projectKey string) ([]Version, error) {
+	data, err := c.do("GET", "/project/"+url.PathEscape(projectKey)+"/versions", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var versions []Version
+	if err := json.Unmarshal(data, &versions); err != nil {
+		return nil, fmt.Errorf("parsing versions: %w", err)
+	}
+	return versions, nil
 }
 
 // agileBase returns the Agile REST API base URL.

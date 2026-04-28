@@ -21,9 +21,10 @@ type Config struct {
 }
 
 type JiraConfig struct {
-	Instance       string `mapstructure:"instance"`
-	DefaultProject string `mapstructure:"default_project"`
-	DefaultBoard   int    `mapstructure:"default_board"`
+	Instance         string `mapstructure:"instance"`
+	DefaultProject   string `mapstructure:"default_project"`
+	DefaultBoard     int    `mapstructure:"default_board"`
+	DefaultComponent string `mapstructure:"default_component"`
 }
 
 type AuthConfig struct {
