@@ -157,6 +157,7 @@ func init() {
 	transitionCmd.Flags().StringP("comment", "m", "", "add a comment with the transition")
 	transitionCmd.Flags().String("pull-request", "", "set Git Pull Request URL")
 	transitionCmd.Flags().String("fix-version", "", "set fix version")
+	transitionCmd.Flags().String("resolution", "", "set resolution (e.g. Fixed, Duplicate, Won't Fix)")
 	transitionCmd.Flags().StringSlice("field", nil, "set a custom field (format: customfield_XXXXX=value)")
 }
 
@@ -252,6 +253,10 @@ func buildTransitionFields(cmd *cobra.Command) (map[string]interface{}, error) {
 
 	if v, _ := cmd.Flags().GetString("fix-version"); v != "" {
 		fields["fixVersions"] = []map[string]string{{"name": v}}
+	}
+
+	if v, _ := cmd.Flags().GetString("resolution"); v != "" {
+		fields["resolution"] = map[string]string{"name": v}
 	}
 
 	if customFields, _ := cmd.Flags().GetStringSlice("field"); len(customFields) > 0 {

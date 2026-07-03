@@ -1,10 +1,53 @@
 package cmd
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/david-truong/liferay-issues-cli/internal/jira"
 )
+
+func TestBuildTransitionFields(t *testing.T) {
+	tests := []struct {
+		name  string
+		flags map[string]string
+		want  map[string]interface{}
+	}{
+		{
+			name:  "resolution sets name object",
+			flags: map[string]string{"resolution": "Duplicate"},
+			want:  map[string]interface{}{"resolution": map[string]string{"name": "Duplicate"}},
+		},
+		{
+			name:  "fix-version sets name object in array",
+			flags: map[string]string{"fix-version": "7.4"},
+			want:  map[string]interface{}{"fixVersions": []map[string]string{{"name": "7.4"}}},
+		},
+		{
+			name:  "no flags set produces empty map",
+			flags: map[string]string{},
+			want:  map[string]interface{}{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cmd := transitionCmd
+			cmd.Flags().Set("resolution", "")
+			cmd.Flags().Set("fix-version", "")
+			cmd.Flags().Set("pull-request", "")
+			for k, v := range tt.flags {
+				cmd.Flags().Set(k, v)
+			}
+			got, err := buildTransitionFields(cmd)
+			if err != nil {
+				t.Fatalf("buildTransitionFields() error = %v", err)
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("buildTransitionFields() = %#v, want %#v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestChainContaining(t *testing.T) {
 	tests := []struct {
