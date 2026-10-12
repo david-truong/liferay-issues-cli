@@ -154,7 +154,7 @@ var transitionCmd = &cobra.Command{
 }
 
 func init() {
-	transitionCmd.Flags().StringP("comment", "m", "", "add a comment with the transition")
+	transitionCmd.Flags().StringP("comment", "m", "", "add a comment with the transition (Markdown)")
 	transitionCmd.Flags().String("pull-request", "", "set Git Pull Request URL")
 	transitionCmd.Flags().String("fix-version", "", "set fix version")
 	transitionCmd.Flags().StringSlice("field", nil, "set a custom field (format: customfield_XXXXX=value)")

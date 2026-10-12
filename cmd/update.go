@@ -18,7 +18,7 @@ var updateCmd = &cobra.Command{
 
 func init() {
 	updateCmd.Flags().StringP("summary", "s", "", "new summary")
-	updateCmd.Flags().StringP("description", "d", "", "new description")
+	updateCmd.Flags().StringP("description", "d", "", "new description (Markdown)")
 	updateCmd.Flags().StringP("assignee", "a", "", "new assignee display name (searches Jira)")
 	updateCmd.Flags().String("assignee-id", "", "new assignee account ID")
 	updateCmd.Flags().String("priority", "", "new priority")

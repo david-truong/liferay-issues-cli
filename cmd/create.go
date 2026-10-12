@@ -19,7 +19,7 @@ func init() {
 	createCmd.Flags().StringP("project", "p", "", "project key (default from config)")
 	createCmd.Flags().StringP("type", "t", "", "issue type (Bug, Story, Task, etc.)")
 	createCmd.Flags().StringP("summary", "s", "", "issue summary")
-	createCmd.Flags().StringP("description", "d", "", "issue description")
+	createCmd.Flags().StringP("description", "d", "", "issue description (Markdown)")
 	createCmd.Flags().StringP("assignee", "a", "", "assignee display name (searches Jira)")
 	createCmd.Flags().String("assignee-id", "", "assignee account ID")
 	createCmd.Flags().String("priority", "", "priority (e.g. High, Medium, Low)")

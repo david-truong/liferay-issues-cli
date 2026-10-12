@@ -188,7 +188,23 @@ echo "Automated comment" | issues comment LPD-12345
 
 # List comments
 issues comment LPD-12345 --list
+
+# Upload files, then post the comment (--attach is repeatable)
+issues comment LPD-12345 -m "Mockup attached" --attach mockup.png --attach trace.log
 ```
+
+### Attachments
+
+```sh
+# Attach one or more files (prints each attachment's id, filename, and size)
+issues attach LPD-12345 mockup.png trace.log
+```
+
+Attachments are listed in `issues view`. They are attached to the ticket, not embedded inline in a comment.
+
+### Markdown
+
+Comment bodies (including `transition -m`) and `create`/`update` descriptions are written as Markdown and converted to Jira's rich text format: headings, `**bold**`, `*italic*`, `~~strike~~`, `` `code` ``, fenced code blocks (with language), bullet and numbered lists (nested), links, blockquotes, and horizontal rules. Images (`![alt](url)`) become links, and raw HTML is kept as literal text. Plain text works as before: blank lines separate paragraphs and single newlines are line breaks.
 
 ### Configuration
 
