@@ -434,23 +434,3 @@ func (c *Client) RemoveFromSprint(issueKeys []string) error {
 	_, err := c.doAgile("POST", "/backlog/issue", body)
 	return err
 }
-
-// MakeADFBody creates a simple ADF document from plain text.
-// Jira Cloud requires Atlassian Document Format for descriptions and comments.
-func MakeADFBody(text string) interface{} {
-	return map[string]interface{}{
-		"version": 1,
-		"type":    "doc",
-		"content": []interface{}{
-			map[string]interface{}{
-				"type": "paragraph",
-				"content": []interface{}{
-					map[string]interface{}{
-						"type": "text",
-						"text": text,
-					},
-				},
-			},
-		},
-	}
-}
