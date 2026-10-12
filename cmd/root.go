@@ -46,6 +46,7 @@ func init() {
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(jqlCmd)
 	rootCmd.AddCommand(commentCmd)
+	rootCmd.AddCommand(attachCmd)
 	rootCmd.AddCommand(openCmd)
 	rootCmd.AddCommand(boardCmd)
 	rootCmd.AddCommand(sprintCmd)

@@ -46,6 +46,14 @@ func PrintIssueDetail(issue *jira.Issue, instance string) {
 		fmt.Println()
 		fmt.Println(desc)
 	}
+
+	if len(issue.Fields.Attachment) > 0 {
+		fmt.Println()
+		fmt.Println("Attachments:")
+		for _, a := range issue.Fields.Attachment {
+			fmt.Printf("  %s  %s (%d bytes)\n", a.ID, a.Filename, a.Size)
+		}
+	}
 }
 
 // PrintSearchResults renders a search result set, including a "no results"

@@ -12,22 +12,23 @@ type Issue struct {
 
 // Fields contains the standard Jira issue fields.
 type Fields struct {
-	Summary     string      `json:"summary"`
-	Description interface{} `json:"description,omitempty"` // Can be string or ADF
-	Status      *Status     `json:"status,omitempty"`
-	Priority    *Priority   `json:"priority,omitempty"`
-	Assignee    *User       `json:"assignee,omitempty"`
-	Reporter    *User       `json:"reporter,omitempty"`
-	IssueType   *IssueType  `json:"issuetype,omitempty"`
-	Project     *Project    `json:"project,omitempty"`
-	Labels      []string    `json:"labels,omitempty"`
-	Components  []Component `json:"components,omitempty"`
-	Versions    []Version   `json:"versions,omitempty"`
-	FixVersions []Version   `json:"fixVersions,omitempty"`
-	Created     string      `json:"created,omitempty"`
-	Updated     string      `json:"updated,omitempty"`
-	Comment     *Comments   `json:"comment,omitempty"`
-	Parent      *Issue      `json:"parent,omitempty"`
+	Summary     string       `json:"summary"`
+	Description interface{}  `json:"description,omitempty"` // Can be string or ADF
+	Status      *Status      `json:"status,omitempty"`
+	Priority    *Priority    `json:"priority,omitempty"`
+	Assignee    *User        `json:"assignee,omitempty"`
+	Reporter    *User        `json:"reporter,omitempty"`
+	IssueType   *IssueType   `json:"issuetype,omitempty"`
+	Project     *Project     `json:"project,omitempty"`
+	Labels      []string     `json:"labels,omitempty"`
+	Components  []Component  `json:"components,omitempty"`
+	Versions    []Version    `json:"versions,omitempty"`
+	FixVersions []Version    `json:"fixVersions,omitempty"`
+	Created     string       `json:"created,omitempty"`
+	Updated     string       `json:"updated,omitempty"`
+	Comment     *Comments    `json:"comment,omitempty"`
+	Parent      *Issue       `json:"parent,omitempty"`
+	Attachment  []Attachment `json:"attachment,omitempty"`
 }
 
 type Status struct {
@@ -41,8 +42,8 @@ type Priority struct {
 }
 
 type User struct {
-	DisplayName string `json:"displayName"`
-	AccountID   string `json:"accountId"`
+	DisplayName  string `json:"displayName"`
+	AccountID    string `json:"accountId"`
 	EmailAddress string `json:"emailAddress,omitempty"`
 }
 
@@ -111,9 +112,9 @@ type CreateIssueResponse struct {
 }
 
 type TransitionRequest struct {
-	Transition TransitionID               `json:"transition"`
-	Update     *TransitionUpdate          `json:"update,omitempty"`
-	Fields     map[string]interface{}     `json:"fields,omitempty"`
+	Transition TransitionID           `json:"transition"`
+	Update     *TransitionUpdate      `json:"update,omitempty"`
+	Fields     map[string]interface{} `json:"fields,omitempty"`
 }
 
 type TransitionID struct {
@@ -161,7 +162,7 @@ type IssueTypeMetadata struct {
 type Sprint struct {
 	ID            int    `json:"id"`
 	Name          string `json:"name"`
-	State         string `json:"state"`       // active, closed, future
+	State         string `json:"state"` // active, closed, future
 	StartDate     string `json:"startDate"`
 	EndDate       string `json:"endDate"`
 	CompleteDate  string `json:"completeDate,omitempty"`
@@ -195,4 +196,13 @@ type SprintsResponse struct {
 func ParseJiraTime(s string) (time.Time, error) {
 	// Jira uses ISO 8601 format
 	return time.Parse("2006-01-02T15:04:05.000-0700", s)
+}
+
+// Attachment represents a file attached to a Jira issue.
+type Attachment struct {
+	ID       string `json:"id"`
+	Filename string `json:"filename"`
+	Size     int64  `json:"size"`
+	MimeType string `json:"mimeType,omitempty"`
+	Content  string `json:"content,omitempty"`
 }

@@ -51,8 +51,13 @@ func (c *Client) doWithBase(baseURL, method, path string, body interface{}) ([]b
 		bodyReader = bytes.NewReader(reqData)
 	}
 
-	reqURL := baseURL + path
-	req, err := http.NewRequest(method, reqURL, bodyReader)
+	return c.send(method, baseURL+path, "application/json", bodyReader, reqData, nil)
+}
+
+// send executes a request with auth headers, the given content type, and any
+// extra headers. debugBody, when set, is echoed in debug output.
+func (c *Client) send(method, reqURL, contentType string, body io.Reader, debugBody []byte, extraHeaders map[string]string) ([]byte, error) {
+	req, err := http.NewRequest(method, reqURL, body)
 	if err != nil {
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
@@ -60,13 +65,16 @@ func (c *Client) doWithBase(baseURL, method, path string, body interface{}) ([]b
 	for k, v := range c.AuthHeader {
 		req.Header[k] = v
 	}
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Type", contentType)
 	req.Header.Set("Accept", "application/json")
+	for k, v := range extraHeaders {
+		req.Header.Set(k, v)
+	}
 
 	if c.Debug {
 		fmt.Fprintf(os.Stderr, "[DEBUG] %s %s\n", method, reqURL)
-		if reqData != nil {
-			fmt.Fprintf(os.Stderr, "[DEBUG] Request body: %s\n", string(reqData))
+		if debugBody != nil {
+			fmt.Fprintf(os.Stderr, "[DEBUG] Request body: %s\n", string(debugBody))
 		}
 	}
 
