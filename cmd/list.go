@@ -113,4 +113,3 @@ func buildFilterJQL(cmd *cobra.Command, requireProject bool) string {
 
 	return strings.Join(clauses, " AND ") + " ORDER BY updated DESC"
 }
-
