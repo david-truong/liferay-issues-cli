@@ -191,6 +191,9 @@ issues comment LPD-12345 --list
 
 # Upload files, then post the comment (--attach is repeatable)
 issues comment LPD-12345 -m "Mockup attached" --attach mockup.png --attach trace.log
+
+# Mention a user by display name (notifies them)
+issues comment LPD-12345 -m "@[Jane Doe] can you take a look?"
 ```
 
 ### Attachments
@@ -205,6 +208,8 @@ Attachments are listed in `issues view`. They are attached to the ticket, not em
 ### Markdown
 
 Comment bodies (including `transition -m`) and `create`/`update` descriptions are written as Markdown and converted to Jira's rich text format: headings, `**bold**`, `*italic*`, `~~strike~~`, `` `code` ``, fenced code blocks (with language), bullet and numbered lists (nested), links, blockquotes, and horizontal rules. Images (`![alt](url)`) become links, and raw HTML is kept as literal text. Plain text works as before: blank lines separate paragraphs and single newlines are line breaks.
+
+Jira's `[~accountid:ID]` mention syntax becomes a real mention everywhere Markdown is accepted. In `issues comment`, `@[Display Name]` is also resolved to that syntax by searching Jira users; an exact (case insensitive) display name match or a single result wins, and otherwise the command fails and lists the candidates with their account IDs.
 
 ### Configuration
 
