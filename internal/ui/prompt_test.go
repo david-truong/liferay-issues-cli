@@ -15,10 +15,10 @@ func TestFindTransitionByName(t *testing.T) {
 	}
 
 	tests := []struct {
-		name     string
-		search   string
-		wantID   string
-		wantNil  bool
+		name    string
+		search  string
+		wantID  string
+		wantNil bool
 	}{
 		{
 			name:   "exact match by transition name",
