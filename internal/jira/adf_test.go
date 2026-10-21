@@ -111,6 +111,26 @@ func TestMakeADFBody_Markdown(t *testing.T) {
 			in:   "a <b>x</b>",
 			want: `{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"a <b>x</b>"}]}]}`,
 		},
+		{
+			name: "account id mention",
+			in:   "Hi [~accountid:60911a0b33a9410071c274a6], thanks",
+			want: `{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"Hi "},{"type":"mention","attrs":{"id":"60911a0b33a9410071c274a6"}},{"type":"text","text":", thanks"}]}]}`,
+		},
+		{
+			name: "account id with colon and two mentions",
+			in:   "[~accountid:557058:f1e2d3c4] and [~accountid:abc123]",
+			want: `{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"mention","attrs":{"id":"557058:f1e2d3c4"}},{"type":"text","text":" and "},{"type":"mention","attrs":{"id":"abc123"}}]}]}`,
+		},
+		{
+			name: "mention in bold drops the mark",
+			in:   "**ping [~accountid:abc123]**",
+			want: `{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"ping ","marks":[{"type":"strong"}]},{"type":"mention","attrs":{"id":"abc123"}}]}]}`,
+		},
+		{
+			name: "mention syntax in code stays text",
+			in:   "`[~accountid:abc123]`",
+			want: `{"type":"doc","version":1,"content":[{"type":"paragraph","content":[{"type":"text","text":"[~accountid:abc123]","marks":[{"type":"code"}]}]}]}`,
+		},
 	}
 
 	for _, tt := range tests {
