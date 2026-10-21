@@ -2,6 +2,7 @@ package jira
 
 import (
 	"bytes"
+	"regexp"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
@@ -13,6 +14,10 @@ import (
 type adfNode = map[string]interface{}
 
 var markdownParser = goldmark.New(goldmark.WithExtensions(extension.Strikethrough)).Parser()
+
+// mentionPattern matches Jira's wiki markup mention, [~accountid:ID]. Account
+// IDs may contain a colon (557058:<uuid>).
+var mentionPattern = regexp.MustCompile(`\[~accountid:([^\]]+)\]`)
 
 // MakeADFBody converts Markdown to an Atlassian Document Format document.
 // Jira Cloud requires ADF for descriptions and comments. Text with no
@@ -147,7 +152,40 @@ func adfInlines(n ast.Node, source []byte, marks []interface{}) []interface{} {
 			}
 		}
 	}
-	return adfMergeText(nodes)
+	return adfMentions(adfMergeText(nodes))
+}
+
+// adfMentions splits [~accountid:ID] mentions out of text nodes into ADF
+// mention nodes. Mentions take no marks, and code text is left as written.
+func adfMentions(nodes []interface{}) []interface{} {
+	var result []interface{}
+	for _, n := range nodes {
+		node := n.(adfNode)
+		value, _ := node["text"].(string)
+		marks, _ := node["marks"].([]interface{})
+		if node["type"] != "text" || hasCodeMark(marks) || !mentionPattern.MatchString(value) {
+			result = append(result, node)
+			continue
+		}
+
+		last := 0
+		for _, m := range mentionPattern.FindAllStringSubmatchIndex(value, -1) {
+			result = append(result, adfTextNodes(value[last:m[0]], marks)...)
+			result = append(result, adfNode{"type": "mention", "attrs": adfNode{"id": value[m[2]:m[3]]}})
+			last = m[1]
+		}
+		result = append(result, adfTextNodes(value[last:], marks)...)
+	}
+	return result
+}
+
+func hasCodeMark(marks []interface{}) bool {
+	for _, mark := range marks {
+		if mark.(adfNode)["type"] == "code" {
+			return true
+		}
+	}
+	return false
 }
 
 func adfLinkMark(destination []byte) adfNode {
