@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 
 	"github.com/david-truong/liferay-issues-cli/internal/git"
 	"github.com/david-truong/liferay-issues-cli/internal/ui"
@@ -25,9 +26,11 @@ Examples:
   issues comment LPD-123                   # explicit ticket, opens editor
   issues comment                           # ticket from branch, opens editor
   issues comment LPD-123 "see mockup" --attach mockup.png   # upload file(s), then comment
+  issues comment LPD-123 "@[Jane Doe] please review"        # mention a user
 
 The message is written as Markdown (headings, bold/italic, code, fenced code
 blocks, lists, links, blockquotes) and converted to Jira's rich text format.
+@[Display Name] and [~accountid:ID] become mentions that notify the user.
 Files given with --attach are uploaded to the ticket before the comment is
 posted; they appear in the ticket's attachments, not inline in the comment.`,
 	Args: cobra.MaximumNArgs(2),
@@ -135,6 +138,11 @@ func commentRun(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("comment body is required (use -m, -e, or pipe via stdin)")
 	}
 
+	message, err = resolveMentions(message)
+	if err != nil {
+		return err
+	}
+
 	if len(attachments) > 0 {
 		if err := uploadAttachments(ticket, attachments); err != nil {
 			return err
@@ -150,4 +158,24 @@ func commentRun(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Comment added to %s\n", ticket)
 	return nil
+}
+
+var userMentionPattern = regexp.MustCompile(`@\[([^\]]+)\]`)
+
+// resolveMentions replaces each @[Display Name] in message with the
+// [~accountid:ID] mention that MakeADFBody turns into a Jira mention.
+func resolveMentions(message string) (string, error) {
+	var err error
+	resolved := userMentionPattern.ReplaceAllStringFunc(message, func(match string) string {
+		if err != nil {
+			return match
+		}
+		var accountID string
+		accountID, err = resolveUser(userMentionPattern.FindStringSubmatch(match)[1], "write [~accountid:ID] with one of")
+		if err != nil {
+			return match
+		}
+		return "[~accountid:" + accountID + "]"
+	})
+	return resolved, err
 }

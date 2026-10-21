@@ -33,6 +33,13 @@ func parseFieldValue(v string) interface{} {
 // account ID. If multiple users match, it returns the first exact match or
 // an error listing the options.
 func resolveAssignee(name string) (string, error) {
+	return resolveUser(name, "use --assignee-id with one of")
+}
+
+// resolveUser is resolveAssignee's lookup. When several users match and none
+// exactly, the error lists them after hint, which tells the caller how to
+// pick one.
+func resolveUser(name, hint string) (string, error) {
 	users, err := client.SearchUsers(name)
 	if err != nil {
 		return "", fmt.Errorf("searching for user %q: %w", name, err)
@@ -58,5 +65,5 @@ func resolveAssignee(name string) (string, error) {
 	for _, u := range users {
 		names = append(names, fmt.Sprintf("  %s (%s)", u.DisplayName, u.AccountID))
 	}
-	return "", fmt.Errorf("multiple users match %q, use --assignee-id with one of:\n%s", name, strings.Join(names, "\n"))
+	return "", fmt.Errorf("multiple users match %q, %s:\n%s", name, hint, strings.Join(names, "\n"))
 }
