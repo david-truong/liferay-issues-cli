@@ -27,6 +27,7 @@ func init() {
 	createCmd.Flags().String("component", "", "component name")
 	createCmd.Flags().BoolP("interactive", "i", false, "interactive mode")
 	createCmd.Flags().String("affects-version", "", "set affects version")
+	createCmd.Flags().String("sprint", "", "add the new issue to a sprint (ID or name)")
 	createCmd.Flags().StringArray("field", nil, "set arbitrary field (key=value, value may be JSON)")
 }
 
@@ -132,6 +133,16 @@ func createRun(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Resolve the sprint before creating so a bad name does not leave an orphan issue
+	sprintID := 0
+	if v, _ := cmd.Flags().GetString("sprint"); v != "" {
+		var err error
+		sprintID, err = resolveSprintFlag(v)
+		if err != nil {
+			return err
+		}
+	}
+
 	resp, err := client.CreateIssue(fields)
 	if err != nil {
 		return err
@@ -139,5 +150,12 @@ func createRun(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Created %s\n", resp.Key)
 	fmt.Printf("https://%s/browse/%s\n", cfg.Jira.Instance, resp.Key)
+
+	if sprintID > 0 {
+		if err := client.MoveToSprint(sprintID, []string{resp.Key}); err != nil {
+			return fmt.Errorf("adding %s to sprint %d: %w", resp.Key, sprintID, err)
+		}
+		fmt.Printf("Moved %s to sprint %d\n", resp.Key, sprintID)
+	}
 	return nil
 }
