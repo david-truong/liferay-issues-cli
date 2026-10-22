@@ -62,10 +62,7 @@ Generate an API token at https://id.atlassian.com/manage-profile/security/api-to
 # From current git branch (extracts ticket ID like LPD-12345)
 issues
 
-# By ticket key
-issues view LPD-12345
-
-# Detailed view with status, assignee, description
+# By ticket key (status, assignee, description, attachments)
 issues view LPD-12345
 
 # Raw JSON output
@@ -89,16 +86,29 @@ issues create -i
 
 # Minimal (uses defaults from config)
 issues create -s "Fix typo in header"
+
+# Add the new issue to a sprint (ID or name)
+issues create -s "Fix typo in header" --sprint "Sprint 42"
 ```
 
 ### Update an issue
 
 ```sh
 issues update LPD-12345 --summary "Updated title"
-issues update LPD-12345 --assignee ACCOUNT_ID
+issues update LPD-12345 --assignee "Jane Doe"
+issues update LPD-12345 --assignee-id ACCOUNT_ID
 issues update LPD-12345 --priority High
 issues update LPD-12345 --add-label frontend
 issues update LPD-12345 --remove-label backend
+issues update LPD-12345 --fix-version 7.4.13
+issues update LPD-12345 --pull-request https://github.com/liferay/liferay-portal/pull/12345
+
+# Move to a sprint (ID or name), or back to the backlog
+issues update LPD-12345 --sprint "Sprint 42"
+issues update LPD-12345 --remove-sprint
+
+# Subtasks cannot be in a sprint directly; move the parent without prompting
+issues update LPD-12345 --sprint "Sprint 42" --include-parent
 ```
 
 ### Transition an issue
@@ -113,7 +123,13 @@ issues transition LPD-12345 resolve
 
 # With a comment
 issues transition LPD-12345 "In Progress" -m "Starting work on this"
+
+# Set fields that the transition screen requires
+issues transition LPD-12345 Closed --resolution Fixed
+issues transition LPD-12345 "In Peer Review" --pull-request https://github.com/liferay/liferay-portal/pull/12345
 ```
+
+When the target status is not a direct transition, known LPD and BPR workflows are walked one step at a time (for example, Open → Selected for Development → In Progress).
 
 ### List issues
 
@@ -126,6 +142,30 @@ issues list -p LPD --status "In Progress"
 
 # Limit results
 issues list -a me -n 50
+
+# Issues on a board or in a sprint (ID or name)
+issues list --board 998
+issues list --sprint "Sprint 42"
+```
+
+### Sprints and boards
+
+A sprint name is matched against the active and future sprints on the default board: `jira.default_board` if set, otherwise the scrum boards of `jira.default_project`. An exact name wins; otherwise any sprint whose name contains the text (case insensitive) matches, and you are prompted when more than one does.
+
+```sh
+# Active sprints on the default board
+issues sprint list
+
+# Other states or boards
+issues sprint list --state active,future
+issues sprint list --board "Site Management"
+
+# Sprint details
+issues sprint view 12345
+
+# Boards
+issues board list --type scrum
+issues board view 998
 ```
 
 ### Find issues
@@ -140,8 +180,10 @@ issues find "login" -p LPD
 # Combine with filters
 issues find "login" -t Bug -a me
 
-# Filter by component
+# Filter by component, label, or exact affects version
 issues find "login" -c "REST Builder"
+issues find "login" -l regression
+issues find "login" -v 7.4.13
 
 # Only closed/fixed issues
 issues find "login" --fixed
@@ -219,6 +261,9 @@ issues config set jira.default_project LPD
 
 # Set default issue type
 issues config set defaults.issue_type Bug
+
+# Set default board for sprint lookups
+issues config set jira.default_board 998
 
 # Set Jira instance (default: liferay.atlassian.net)
 issues config set jira.instance your-instance.atlassian.net
