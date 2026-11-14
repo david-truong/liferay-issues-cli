@@ -263,6 +263,8 @@ issues link --types
 
 Some types share a phrase that differs only in case (`Blocks`: "is blocked by", `Blocked`: "Is blocked by"). A type name beats a phrase and an exact-case match beats a case-insensitive one; a remaining tie is an error.
 
+A type name always means its outward phrase, which does not always read like the name: `Depends` is "is a dependency of", so `issues link A Depends B` records that A is a dependency of B. Use the phrase (`issues link A "depends on" B`) instead.
+
 ### Markdown
 
 Comment bodies (including `transition -m`) and `create`/`update` descriptions are written as Markdown and converted to Jira's rich text format: headings, `**bold**`, `*italic*`, `~~strike~~`, `` `code` ``, fenced code blocks (with language), bullet and numbered lists (nested), links, blockquotes, and horizontal rules. Images (`![alt](url)`) become links, and raw HTML is kept as literal text. Plain text works as before: blank lines separate paragraphs and single newlines are line breaks.
