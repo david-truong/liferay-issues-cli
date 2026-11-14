@@ -12,6 +12,7 @@ func TestResolveLinkRelation(t *testing.T) {
 	types := []jira.IssueLinkType{
 		{Name: "Blocked", Inward: "Is blocked by", Outward: "Is blocking"},
 		{Name: "Blocks", Inward: "is blocked by", Outward: "blocks"},
+		{Name: "Depends", Inward: "depends on", Outward: "is a dependency of"},
 		{Name: "Duplicate", Inward: "is duplicated by", Outward: "duplicates"},
 		{Name: "Relates", Inward: "relates to", Outward: "relates to"},
 		{Name: "Relationship", Inward: "is related to", Outward: "relates"},
@@ -31,6 +32,8 @@ func TestResolveLinkRelation(t *testing.T) {
 		{name: "type name is outward", types: types, relation: "Duplicate", wantType: "Duplicate"},
 		{name: "case insensitive and trimmed", types: types, relation: "  Is Duplicated By ", wantType: "Duplicate", wantInward: true},
 		{name: "symmetric phrase is outward", types: types, relation: "relates to", wantType: "Relates"},
+		{name: "type name is outward even when it reads inward", types: types, relation: "Depends", wantType: "Depends"},
+		{name: "inward phrase of a type named for it", types: types, relation: "depends on", wantType: "Depends", wantInward: true},
 		{name: "type name beats another type's phrase", types: types, relation: "relates", wantType: "Relates"},
 		{name: "unknown relation", types: types, relation: "unblocks", wantErr: true},
 		{name: "case insensitive tie is ambiguous", types: types, relation: "IS BLOCKED BY", wantErr: true},

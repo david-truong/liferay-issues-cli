@@ -13,8 +13,15 @@ var linkCmd = &cobra.Command{
 	Use:   "link <TICKET> <RELATION> <TICKET>",
 	Short: "Link two Jira issues",
 	Long: `Link two Jira issues. The command reads as a sentence: the relation is a
-link type name or either of its phrases, matched case-insensitively. An inward
-phrase such as "is blocked by" links the tickets in the reverse direction.
+link type name or either of its phrases. An inward phrase such as
+"is blocked by" links the tickets in the reverse direction.
+
+A type name always means its outward phrase, which does not always read like
+the name: "Depends" is "is a dependency of", so "A Depends B" records that A is
+a dependency of B. Prefer the phrases.
+
+A type name beats a phrase and an exact-case match beats a case-insensitive
+one; a remaining tie is an error.
 
 Run "issues link --types" to list the link types and their phrases.
 
