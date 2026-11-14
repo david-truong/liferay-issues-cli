@@ -259,6 +259,12 @@ issues link LPD-12345 "is blocked by" LPD-67890
 
 # List the link types and their outward and inward phrases
 issues link --types
+
+# Remove the only link between two issues
+issues unlink LPD-12345 LPD-67890
+
+# Pick one of several links with the relation
+issues unlink LPD-12345 "is blocked by" LPD-67890
 ```
 
 Some types share a phrase that differs only in case (`Blocks`: "is blocked by", `Blocked`: "Is blocked by"). A type name beats a phrase and an exact-case match beats a case-insensitive one; a remaining tie is an error.

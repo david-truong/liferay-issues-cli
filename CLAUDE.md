@@ -32,7 +32,7 @@ The release flow tags `vX.Y.Z`, GoReleaser builds binaries for all platforms and
 ### Layout
 
 - `main.go` → `cmd.Execute()`.
-- `cmd/` — one file per Cobra subcommand (`view`, `create`, `update`, `transition`, `list`, `find`, `jql`, `comment`, `attach`, `link`, `open`, `board`, `sprint`, `config_cmd`). All in `package cmd`. New subcommands must be registered in `cmd/root.go`'s `init()`.
+- `cmd/` — one file per Cobra subcommand (`view`, `create`, `update`, `transition`, `list`, `find`, `jql`, `comment`, `attach`, `link`, `unlink`, `open`, `board`, `sprint`, `config_cmd`). All in `package cmd`. New subcommands must be registered in `cmd/root.go`'s `init()`.
 - `internal/config` — viper-backed YAML config at `$XDG_CONFIG_HOME/issues/config.yaml` (default `~/.config/issues/config.yaml`). Holds Jira instance, defaults, and optional auth.
 - `internal/jira` — typed REST client (`Client`, `Issue`, `Version`, `Component`, `Sprint`, …). All HTTP goes through `Client.do` / `doWithBase`; the agile API uses `agileBase()` which rewrites `/rest/api/3` → `/rest/agile/1.0`.
 - `internal/jira/adf.go` — `MakeADFBody` converts Markdown to ADF via goldmark's AST. Every ADF-writing path (comment, transition comment, `create`/`update` description) goes through it. It turns `[~accountid:ID]` into a `mention` node after merging text nodes (goldmark splits text at brackets) and leaves code text alone; `cmd/comment.go`'s `resolveMentions` rewrites `@[Display Name]` to that syntax through `resolveUser` before conversion. `internal/jira/attachment.go` — `AddAttachments` does the multipart upload (`X-Atlassian-Token: no-check`). Inline media in ADF is not supported: it needs a media-API UUID the REST attachment response does not return.
