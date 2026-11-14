@@ -219,3 +219,13 @@ type IssueLinkType struct {
 type IssueLinkTypesResponse struct {
 	IssueLinkTypes []IssueLinkType `json:"issueLinkTypes"`
 }
+
+// IssueLink is a link as it appears on one issue: the other issue is in
+// OutwardIssue when this issue is the inward side (this issue <outward phrase>
+// OutwardIssue), and in InwardIssue otherwise.
+type IssueLink struct {
+	ID           string        `json:"id"`
+	Type         IssueLinkType `json:"type"`
+	InwardIssue  *Issue        `json:"inwardIssue,omitempty"`
+	OutwardIssue *Issue        `json:"outwardIssue,omitempty"`
+}

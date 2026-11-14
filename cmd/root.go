@@ -48,6 +48,7 @@ func init() {
 	rootCmd.AddCommand(commentCmd)
 	rootCmd.AddCommand(attachCmd)
 	rootCmd.AddCommand(linkCmd)
+	rootCmd.AddCommand(unlinkCmd)
 	rootCmd.AddCommand(openCmd)
 	rootCmd.AddCommand(boardCmd)
 	rootCmd.AddCommand(sprintCmd)
