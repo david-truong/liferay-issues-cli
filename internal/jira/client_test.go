@@ -338,3 +338,64 @@ func TestClient_ServerError(t *testing.T) {
 		t.Fatal("expected error for 500 response")
 	}
 }
+
+func TestGetIssueLinkTypes(t *testing.T) {
+	client, server := testServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			t.Errorf("unexpected method: %s", r.Method)
+		}
+		if r.URL.Path != "/issueLinkType" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		json.NewEncoder(w).Encode(IssueLinkTypesResponse{
+			IssueLinkTypes: []IssueLinkType{
+				{ID: "10000", Name: "Blocks", Inward: "is blocked by", Outward: "blocks"},
+			},
+		})
+	})
+	defer server.Close()
+
+	types, err := client.GetIssueLinkTypes()
+	if err != nil {
+		t.Fatalf("GetIssueLinkTypes() error = %v", err)
+	}
+	if len(types) != 1 || types[0].Name != "Blocks" || types[0].Inward != "is blocked by" {
+		t.Errorf("GetIssueLinkTypes() = %+v", types)
+	}
+}
+
+func TestLinkIssues(t *testing.T) {
+	client, server := testServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			t.Errorf("unexpected method: %s", r.Method)
+		}
+		if r.URL.Path != "/issueLink" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+
+		var body struct {
+			Type         struct{ Name string } `json:"type"`
+			InwardIssue  struct{ Key string }  `json:"inwardIssue"`
+			OutwardIssue struct{ Key string }  `json:"outwardIssue"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Fatalf("decoding request: %v", err)
+		}
+		if body.Type.Name != "Blocks" {
+			t.Errorf("type = %q, want Blocks", body.Type.Name)
+		}
+		if body.InwardIssue.Key != "LPD-1" {
+			t.Errorf("inwardIssue = %q, want LPD-1", body.InwardIssue.Key)
+		}
+		if body.OutwardIssue.Key != "LPD-2" {
+			t.Errorf("outwardIssue = %q, want LPD-2", body.OutwardIssue.Key)
+		}
+
+		w.WriteHeader(201)
+	})
+	defer server.Close()
+
+	if err := client.LinkIssues("Blocks", "LPD-1", "LPD-2"); err != nil {
+		t.Fatalf("LinkIssues() error = %v", err)
+	}
+}

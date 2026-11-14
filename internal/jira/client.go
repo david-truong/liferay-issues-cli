@@ -442,3 +442,29 @@ func (c *Client) RemoveFromSprint(issueKeys []string) error {
 	_, err := c.doAgile("POST", "/backlog/issue", body)
 	return err
 }
+
+// GetIssueLinkTypes returns the issue link types defined on the instance.
+func (c *Client) GetIssueLinkTypes() ([]IssueLinkType, error) {
+	data, err := c.do("GET", "/issueLinkType", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp IssueLinkTypesResponse
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil, fmt.Errorf("parsing issue link types: %w", err)
+	}
+	return resp.IssueLinkTypes, nil
+}
+
+// LinkIssues links two issues so that inwardKey <outward phrase> outwardKey
+// (e.g. with "Blocks", inwardKey blocks outwardKey).
+func (c *Client) LinkIssues(linkType, inwardKey, outwardKey string) error {
+	body := map[string]interface{}{
+		"type":         map[string]string{"name": linkType},
+		"inwardIssue":  map[string]string{"key": inwardKey},
+		"outwardIssue": map[string]string{"key": outwardKey},
+	}
+	_, err := c.do("POST", "/issueLink", body)
+	return err
+}
