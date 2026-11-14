@@ -206,3 +206,16 @@ type Attachment struct {
 	MimeType string `json:"mimeType,omitempty"`
 	Content  string `json:"content,omitempty"`
 }
+
+// IssueLinkType is a kind of link between issues, such as "Blocks", with the
+// phrases Jira shows on each side ("blocks", "is blocked by").
+type IssueLinkType struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Inward  string `json:"inward"`
+	Outward string `json:"outward"`
+}
+
+type IssueLinkTypesResponse struct {
+	IssueLinkTypes []IssueLinkType `json:"issueLinkTypes"`
+}

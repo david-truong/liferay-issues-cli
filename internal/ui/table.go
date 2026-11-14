@@ -292,3 +292,14 @@ func extractInlineText(block map[string]interface{}) string {
 	}
 	return strings.Join(parts, "")
 }
+
+// PrintIssueLinkTypeTable prints a table of issue link types.
+func PrintIssueLinkTypeTable(types []jira.IssueLinkType) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintf(w, "\033[1mNAME\tOUTWARD\tINWARD\033[0m\n")
+
+	for _, t := range types {
+		fmt.Fprintf(w, "%s\t%s\t%s\n", t.Name, t.Outward, t.Inward)
+	}
+	w.Flush()
+}
