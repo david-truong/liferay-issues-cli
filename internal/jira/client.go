@@ -468,3 +468,27 @@ func (c *Client) LinkIssues(linkType, inwardKey, outwardKey string) error {
 	_, err := c.do("POST", "/issueLink", body)
 	return err
 }
+
+// GetIssueLinks returns the links on an issue.
+func (c *Client) GetIssueLinks(key string) ([]IssueLink, error) {
+	data, err := c.do("GET", "/issue/"+url.PathEscape(key)+"?fields=issuelinks", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var issue struct {
+		Fields struct {
+			IssueLinks []IssueLink `json:"issuelinks"`
+		} `json:"fields"`
+	}
+	if err := json.Unmarshal(data, &issue); err != nil {
+		return nil, fmt.Errorf("parsing issue links: %w", err)
+	}
+	return issue.Fields.IssueLinks, nil
+}
+
+// DeleteIssueLink deletes an issue link by ID.
+func (c *Client) DeleteIssueLink(id string) error {
+	_, err := c.do("DELETE", "/issueLink/"+url.PathEscape(id), nil)
+	return err
+}

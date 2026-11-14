@@ -23,7 +23,8 @@ a dependency of B. Prefer the phrases.
 A type name beats a phrase and an exact-case match beats a case-insensitive
 one; a remaining tie is an error.
 
-Run "issues link --types" to list the link types and their phrases.
+Run "issues link --types" to list the link types and their phrases, and
+"issues unlink" to remove a link.
 
 Examples:
   issues link LPD-1 blocks LPD-2

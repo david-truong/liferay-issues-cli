@@ -399,3 +399,38 @@ func TestLinkIssues(t *testing.T) {
 		t.Fatalf("LinkIssues() error = %v", err)
 	}
 }
+
+func TestGetIssueLinks(t *testing.T) {
+	client, server := testServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/issue/LPD-1" || r.URL.Query().Get("fields") != "issuelinks" {
+			t.Errorf("unexpected request: %s", r.URL)
+		}
+		w.Write([]byte(`{"fields":{"issuelinks":[{"id":"923681","type":{"name":"Blocks","inward":"is blocked by","outward":"blocks"},"outwardIssue":{"key":"LPD-2"}}]}}`))
+	})
+	defer server.Close()
+
+	links, err := client.GetIssueLinks("LPD-1")
+	if err != nil {
+		t.Fatalf("GetIssueLinks() error = %v", err)
+	}
+	if len(links) != 1 || links[0].ID != "923681" || links[0].Type.Outward != "blocks" || links[0].OutwardIssue.Key != "LPD-2" || links[0].InwardIssue != nil {
+		t.Errorf("GetIssueLinks() = %+v", links)
+	}
+}
+
+func TestDeleteIssueLink(t *testing.T) {
+	client, server := testServer(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "DELETE" {
+			t.Errorf("unexpected method: %s", r.Method)
+		}
+		if r.URL.Path != "/issueLink/923681" {
+			t.Errorf("unexpected path: %s", r.URL.Path)
+		}
+		w.WriteHeader(204)
+	})
+	defer server.Close()
+
+	if err := client.DeleteIssueLink("923681"); err != nil {
+		t.Fatalf("DeleteIssueLink() error = %v", err)
+	}
+}
