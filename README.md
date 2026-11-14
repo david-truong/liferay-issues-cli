@@ -247,6 +247,22 @@ issues attach LPD-12345 mockup.png trace.log
 
 Attachments are listed in `issues view`. They are attached to the ticket, not embedded inline in a comment.
 
+### Links
+
+```sh
+# Link two issues; the relation reads as a sentence (link type name or either phrase)
+issues link LPD-12345 blocks LPD-67890
+issues link LPD-12345 relates LPD-67890
+
+# An inward phrase links in the reverse direction (LPD-67890 blocks LPD-12345)
+issues link LPD-12345 "is blocked by" LPD-67890
+
+# List the link types and their outward and inward phrases
+issues link --types
+```
+
+Some types share a phrase that differs only in case (`Blocks`: "is blocked by", `Blocked`: "Is blocked by"). A type name beats a phrase and an exact-case match beats a case-insensitive one; a remaining tie is an error.
+
 ### Markdown
 
 Comment bodies (including `transition -m`) and `create`/`update` descriptions are written as Markdown and converted to Jira's rich text format: headings, `**bold**`, `*italic*`, `~~strike~~`, `` `code` ``, fenced code blocks (with language), bullet and numbered lists (nested), links, blockquotes, and horizontal rules. Images (`![alt](url)`) become links, and raw HTML is kept as literal text. Plain text works as before: blank lines separate paragraphs and single newlines are line breaks.
